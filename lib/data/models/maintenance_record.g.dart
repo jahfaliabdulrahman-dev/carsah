@@ -67,13 +67,18 @@ const MaintenanceRecordSchema = CollectionSchema(
       name: r'serviceType',
       type: IsarType.string,
     ),
-    r'totalCostSar': PropertySchema(
+    r'taskKeys': PropertySchema(
       id: 10,
+      name: r'taskKeys',
+      type: IsarType.stringList,
+    ),
+    r'totalCostSar': PropertySchema(
+      id: 11,
       name: r'totalCostSar',
       type: IsarType.double,
     ),
     r'vehicleId': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'vehicleId',
       type: IsarType.long,
     )
@@ -137,6 +142,18 @@ int _maintenanceRecordEstimateSize(
     }
   }
   bytesCount += 3 + object.serviceType.length * 3;
+  {
+    final list = object.taskKeys;
+    if (list != null) {
+      bytesCount += 3 + list.length * 3;
+      {
+        for (var i = 0; i < list.length; i++) {
+          final value = list[i];
+          bytesCount += value.length * 3;
+        }
+      }
+    }
+  }
   return bytesCount;
 }
 
@@ -156,8 +173,9 @@ void _maintenanceRecordSerialize(
   writer.writeString(offsets[7], object.providerName);
   writer.writeDateTime(offsets[8], object.serviceDate);
   writer.writeString(offsets[9], object.serviceType);
-  writer.writeDouble(offsets[10], object.totalCostSar);
-  writer.writeLong(offsets[11], object.vehicleId);
+  writer.writeStringList(offsets[10], object.taskKeys);
+  writer.writeDouble(offsets[11], object.totalCostSar);
+  writer.writeLong(offsets[12], object.vehicleId);
 }
 
 MaintenanceRecord _maintenanceRecordDeserialize(
@@ -178,8 +196,9 @@ MaintenanceRecord _maintenanceRecordDeserialize(
     providerName: reader.readStringOrNull(offsets[7]),
     serviceDate: reader.readDateTime(offsets[8]),
     serviceType: reader.readString(offsets[9]),
-    totalCostSar: reader.readDouble(offsets[10]),
-    vehicleId: reader.readLong(offsets[11]),
+    taskKeys: reader.readStringList(offsets[10]),
+    totalCostSar: reader.readDouble(offsets[11]),
+    vehicleId: reader.readLong(offsets[12]),
   );
   return object;
 }
@@ -212,8 +231,10 @@ P _maintenanceRecordDeserializeProp<P>(
     case 9:
       return (reader.readString(offset)) as P;
     case 10:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readStringList(offset)) as P;
     case 11:
+      return (reader.readDouble(offset)) as P;
+    case 12:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1472,6 +1493,249 @@ extension MaintenanceRecordQueryFilter
   }
 
   QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'taskKeys',
+      ));
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'taskKeys',
+      ));
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'taskKeys',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'taskKeys',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'taskKeys',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'taskKeys',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'taskKeys',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'taskKeys',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'taskKeys',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'taskKeys',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'taskKeys',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'taskKeys',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'taskKeys',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'taskKeys',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'taskKeys',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'taskKeys',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'taskKeys',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
+      taskKeysLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'taskKeys',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
       totalCostSarEqualTo(
     double value, {
     double epsilon = Query.epsilon,
@@ -2000,6 +2264,13 @@ extension MaintenanceRecordQueryWhereDistinct
   }
 
   QueryBuilder<MaintenanceRecord, MaintenanceRecord, QDistinct>
+      distinctByTaskKeys() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'taskKeys');
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QDistinct>
       distinctByTotalCostSar() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'totalCostSar');
@@ -2086,6 +2357,13 @@ extension MaintenanceRecordQueryProperty
       serviceTypeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'serviceType');
+    });
+  }
+
+  QueryBuilder<MaintenanceRecord, List<String>?, QQueryOperations>
+      taskKeysProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'taskKeys');
     });
   }
 

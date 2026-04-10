@@ -17,6 +17,7 @@ class MaintenanceRecord {
   double partsCostSar;
   double laborCostSar;
   List<String>? partsReplaced;
+  List<String>? taskKeys;
   String? providerName;
 
   late DateTime serviceDate;
@@ -34,6 +35,7 @@ class MaintenanceRecord {
     this.partsCostSar = 0.0,
     this.laborCostSar = 0.0,
     this.partsReplaced,
+    this.taskKeys,
     this.providerName,
     required this.serviceDate,
     required this.createdAt,

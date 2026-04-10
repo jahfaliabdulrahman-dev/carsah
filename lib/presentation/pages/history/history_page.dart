@@ -2,11 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/maintenance_record.dart';
+import '../../../data/models/service_task.dart';
 import '../../../presentation/providers/maintenance_provider.dart';
+import '../../../presentation/providers/service_task_provider.dart';
 import '../../../presentation/providers/settings_provider.dart';
 import 'record_detail_page.dart';
 import 'widgets/add_record_dialog.dart';
 import 'widgets/edit_record_dialog.dart';
+
+/// Resolves the display name for a record's service type.
+/// Uses taskKey lookup first (dynamic), falls back to stored name.
+String resolveServiceName(
+  MaintenanceRecord record,
+  List<ServiceTask> allTasks,
+  String Function(String) t,
+) {
+  if (record.taskKeys != null && record.taskKeys!.isNotEmpty) {
+    final taskKey = record.taskKeys!.first;
+    final match = allTasks.where((t) => t.taskKey == taskKey);
+    if (match.isNotEmpty) {
+      return t(match.first.displayNameEn);
+    }
+  }
+  return t(record.serviceType);
+}
 
 /// ============================================================
 /// History Page — Maintenance Records List
@@ -21,6 +40,8 @@ class HistoryPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final maintenanceAsync = ref.watch(maintenanceProvider);
+    final tasksAsync = ref.watch(serviceTaskProvider);
+    final allTasks = tasksAsync.valueOrNull?.allTasks ?? [];
     final t = ref.watch(settingsProvider).t;
 
     return Scaffold(
@@ -90,6 +111,7 @@ class HistoryPage extends ConsumerWidget {
                 ),
                 child: _HistoryCard(
                   record: record,
+                  resolvedName: resolveServiceName(record, allTasks, t),
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -165,6 +187,7 @@ class HistoryPage extends ConsumerWidget {
 /// Accent-border history card with tap-to-detail + edit/delete actions.
 class _HistoryCard extends StatelessWidget {
   final MaintenanceRecord record;
+  final String resolvedName;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -173,6 +196,7 @@ class _HistoryCard extends StatelessWidget {
 
   const _HistoryCard({
     required this.record,
+    required this.resolvedName,
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
@@ -239,7 +263,7 @@ class _HistoryCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            t(record.serviceType),
+                            resolvedName,
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 14,

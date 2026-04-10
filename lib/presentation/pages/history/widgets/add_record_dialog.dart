@@ -198,6 +198,7 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog> {
         partsCostSar: cost,
         laborCostSar: 0.0,
         partsReplaced: [taskMap[taskKey] ?? taskKey],
+        taskKeys: [taskKey],
         serviceDate: _selectedDate,
         createdAt: _selectedDate,
       );

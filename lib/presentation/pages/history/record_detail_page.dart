@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/maintenance_record.dart';
 import '../../providers/maintenance_provider.dart';
+import '../../providers/service_task_provider.dart';
 import '../../providers/settings_provider.dart';
+import 'history_page.dart' show resolveServiceName;
 import 'widgets/edit_record_dialog.dart';
 
 /// ============================================================
@@ -23,6 +25,8 @@ class RecordDetailPage extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final t = settings.t;
     final colorScheme = Theme.of(context).colorScheme;
+    final allTasks = ref.watch(serviceTaskProvider).valueOrNull?.allTasks ?? [];
+    final resolvedName = resolveServiceName(record, allTasks, t);
 
     return Scaffold(
       appBar: AppBar(
@@ -74,7 +78,7 @@ class RecordDetailPage extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            t(record.serviceType),
+                            resolvedName,
                             style: Theme.of(context)
                                 .textTheme
                                 .titleLarge

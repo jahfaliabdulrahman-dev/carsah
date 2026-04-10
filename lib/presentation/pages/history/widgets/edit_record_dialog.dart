@@ -75,6 +75,7 @@ class _EditRecordDialogState extends ConsumerState<EditRecordDialog> {
       partsCostSar: widget.record.partsCostSar,
       laborCostSar: widget.record.laborCostSar,
       partsReplaced: widget.record.partsReplaced,
+      taskKeys: widget.record.taskKeys,
       providerName: widget.record.providerName,
       serviceDate: _selectedDate,
       createdAt: widget.record.createdAt,

@@ -159,6 +159,18 @@ const _translations = {
   'done_at_km': {'en': 'Done at (KM)', 'ar': 'تمت عند (كم)'},
   'finish_setup': {'en': 'Finish Setup', 'ar': 'إنهاء الإعداد'},
   'skip_for_now': {'en': 'Skip', 'ar': 'تخطي'},
+
+  // Record Detail
+  'record_details': {'en': 'Record Details', 'ar': 'تفاصيل السجل'},
+  'edit_record': {'en': 'Edit Record', 'ar': 'تعديل السجل'},
+  'delete_confirm_title': {'en': 'Delete Record?', 'ar': 'حذف السجل؟'},
+  'delete_confirm_body': {
+    'en': 'This action cannot be undone. Are you sure?',
+    'ar': 'لا يمكن التراجع عن هذا الإجراء. هل أنت متأكد؟'
+  },
+  'total_cost': {'en': 'Total Cost', 'ar': 'إجمالي التكلفة'},
+  'services_performed': {'en': 'Services Performed', 'ar': 'الخدمات المنجزة'},
+  'labor_cost': {'en': 'Labor', 'ar': 'العمالة'},
 };
 
 /// Immutable settings state.

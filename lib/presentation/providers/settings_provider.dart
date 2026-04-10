@@ -122,6 +122,15 @@ const _translations = {
     'en': 'Start from current odometer',
     'ar': 'ابدأ من العداد الحالي'
   },
+  'tracking_factory': {
+    'en': 'Tracking begins from factory',
+    'ar': 'يبدأ التتبع من المصنع'
+  },
+  'tracking_now': {
+    'en': 'Tracking begins now (just serviced)',
+    'ar': 'يبدأ التتبع الآن (تمت الصيانة)'
+  },
+  'optional': {'en': 'optional', 'ar': 'اختياري'},
   'service_type': {'en': 'Service Type', 'ar': 'نوع الصيانة'},
   'service_date': {'en': 'Service Date', 'ar': 'تاريخ الصيانة'},
   'cost': {'en': 'Cost', 'ar': 'التكلفة'},

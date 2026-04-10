@@ -264,96 +264,102 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // — Service Date Picker —
+                // — Date + Odometer (side by side) —
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                      side: BorderSide(
-                        color: Theme.of(context).colorScheme.outline,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Date Picker
+                      Expanded(
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(4),
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: _selectedDate,
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime.now(),
+                            );
+                            if (picked != null) {
+                              setState(() => _selectedDate = picked);
+                            }
+                          },
+                          child: InputDecorator(
+                            decoration: InputDecoration(
+                              labelText: t('service_date'),
+                              border: const OutlineInputBorder(),
+                              isDense: true,
+                              prefixIcon: const Icon(
+                                Icons.calendar_today_outlined,
+                                size: 18,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 14,
+                              ),
+                            ),
+                            child: Text(
+                              '${_selectedDate.year}-'
+                              '${_selectedDate.month.toString().padLeft(2, '0')}-'
+                              '${_selectedDate.day.toString().padLeft(2, '0')}',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                    leading: const Icon(Icons.calendar_today_outlined, size: 20),
-                    title: Text(
-                      t('service_date'),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      const SizedBox(width: 12),
+                      // Odometer
+                      Expanded(
+                        child: TextFormField(
+                          controller: _odometerController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          decoration: InputDecoration(
+                            labelText: t('odometer'),
+                            border: const OutlineInputBorder(),
+                            isDense: true,
+                            prefixIcon: const Icon(Icons.speed_outlined, size: 18),
+                            suffixText: t('km'),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 14,
+                            ),
+                          ),
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return t('odometer');
+                            }
+                            if (int.tryParse(_sanitizeDigits(v.trim())) == null) {
+                              return 'Invalid number';
+                            }
+                            return null;
+                          },
+                        ),
                       ),
-                    ),
-                    subtitle: Text(
-                      '${_selectedDate.year}-'
-                      '${_selectedDate.month.toString().padLeft(2, '0')}-'
-                      '${_selectedDate.day.toString().padLeft(2, '0')}',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _selectedDate,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime.now(),
-                      );
-                      if (picked != null) {
-                        setState(() => _selectedDate = picked);
-                      }
-                    },
+                    ],
                   ),
                 ),
                 const SizedBox(height: 12),
 
-                // — Shared Odometer —
-                Padding(
-                  padding: const EdgeInsets.only(top: 12.0),
-                  child: TextFormField(
-                    controller: _odometerController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
-                  decoration: InputDecoration(
-                    labelText: t('odometer'),
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                    prefixIcon: const Icon(Icons.speed_outlined),
-                    suffixText: t('km'),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 14,
-                    ),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return t('odometer');
-                    }
-                    if (int.tryParse(_sanitizeDigits(v.trim())) == null) {
-                      return 'Invalid number';
-                    }
-                    return null;
-                  },
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // — Shared Notes —
+                // — Shared Notes (compact) —
                 TextFormField(
                   controller: _notesController,
+                  minLines: 1,
                   maxLines: 2,
                   decoration: InputDecoration(
-                    labelText: '${t('notes')} (optional)',
+                    labelText: '${t('notes')} (${t('optional')})',
                     border: const OutlineInputBorder(),
+                    isDense: true,
                     alignLabelWithHint: true,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
                 // — Task Checklist —
                 tasksAsync.when(
@@ -385,7 +391,7 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               CheckboxListTile(
-                                title: Text(task.displayNameEn),
+                                title: Text(t(task.displayNameEn)),
                                 value: isSelected,
                                 onChanged: (checked) {
                                   setState(() {
@@ -397,6 +403,8 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog> {
                                   });
                                 },
                                 dense: true,
+                                visualDensity: VisualDensity.compact,
+                                contentPadding: EdgeInsets.zero,
                               ),
                               if (isSelected)
                                 Padding(

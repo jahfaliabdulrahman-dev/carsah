@@ -160,8 +160,8 @@ class _AddCustomTaskDialogState extends ConsumerState<AddCustomTaskDialog> {
                 ),
                 subtitle: Text(
                   _startFromCurrent
-                      ? 'Tracking begins now (just serviced)'
-                      : 'Tracking begins from factory',
+                      ? t('tracking_now')
+                      : t('tracking_factory'),
                   style: const TextStyle(fontSize: 12),
                 ),
                 value: _startFromCurrent,

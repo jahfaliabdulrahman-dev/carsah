@@ -256,213 +256,223 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog> {
 
     return AlertDialog(
       title: Text(t('log_service')),
+      contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       content: SizedBox(
         width: double.maxFinite,
         child: Form(
           key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // — Date + Odometer (side by side) —
-                Padding(
-                  padding: const EdgeInsets.only(top: 12.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Date Picker
-                      Expanded(
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(4),
-                          onTap: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: _selectedDate,
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime.now(),
-                            );
-                            if (picked != null) {
-                              setState(() => _selectedDate = picked);
-                            }
-                          },
-                          child: InputDecorator(
-                            decoration: InputDecoration(
-                              labelText: t('service_date'),
-                              border: const OutlineInputBorder(),
-                              isDense: true,
-                              prefixIcon: const Icon(
-                                Icons.calendar_today_outlined,
-                                size: 18,
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 14,
-                              ),
-                            ),
-                            child: Text(
-                              '${_selectedDate.year}-'
-                              '${_selectedDate.month.toString().padLeft(2, '0')}-'
-                              '${_selectedDate.day.toString().padLeft(2, '0')}',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // — Date + Odometer (side by side) —
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Date Picker
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(4),
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                        );
+                        if (picked != null) {
+                          setState(() => _selectedDate = picked);
+                        }
+                      },
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: t('service_date'),
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                          prefixIcon: const Icon(
+                            Icons.calendar_today_outlined,
+                            size: 18,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 14,
+                          ),
+                        ),
+                        child: Text(
+                          '${_selectedDate.year}-'
+                          '${_selectedDate.month.toString().padLeft(2, '0')}-'
+                          '${_selectedDate.day.toString().padLeft(2, '0')}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      // Odometer
-                      Expanded(
-                        child: TextFormField(
-                          controller: _odometerController,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          decoration: InputDecoration(
-                            labelText: t('odometer'),
-                            border: const OutlineInputBorder(),
-                            isDense: true,
-                            prefixIcon: const Icon(Icons.speed_outlined, size: 18),
-                            suffixText: t('km'),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 14,
-                            ),
-                          ),
-                          validator: (v) {
-                            if (v == null || v.trim().isEmpty) {
-                              return t('odometer');
-                            }
-                            if (int.tryParse(_sanitizeDigits(v.trim())) == null) {
-                              return 'Invalid number';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-
-                // — Shared Notes (compact) —
-                TextFormField(
-                  controller: _notesController,
-                  minLines: 1,
-                  maxLines: 2,
-                  decoration: InputDecoration(
-                    labelText: '${t('notes')} (${t('optional')})',
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                    alignLabelWithHint: true,
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // — Task Checklist —
-                tasksAsync.when(
-                  data: (state) {
-                    final tasks = state.allTasks;
-                    if (tasks.isEmpty) {
-                      return Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Text(t('no_tasks_loaded')),
-                      );
-                    }
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t('select_services'),
-                          style: Theme.of(context).textTheme.labelLarge,
-                        ),
-                        const SizedBox(height: 8),
-                        ...tasks.map((task) {
-                          final controller = _costControllers.putIfAbsent(
-                            task.taskKey,
-                            () => TextEditingController(),
-                          );
-                          final isSelected = _selectedTasks.contains(task.taskKey);
-
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CheckboxListTile(
-                                title: Text(t(task.displayNameEn)),
-                                value: isSelected,
-                                onChanged: (checked) {
-                                  setState(() {
-                                    if (checked == true) {
-                                      _selectedTasks.add(task.taskKey);
-                                    } else {
-                                      _selectedTasks.remove(task.taskKey);
-                                    }
-                                  });
-                                },
-                                dense: true,
-                                visualDensity: VisualDensity.compact,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                              if (isSelected)
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    left: 16, right: 16, bottom: 8,
-                                  ),
-                                  child: TextFormField(
-                                    controller: controller,
-                                    keyboardType:
-                                        const TextInputType.numberWithOptions(
-                                            decimal: true),
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.allow(
-                                        RegExp(r'^\d*\.?\d{0,2}'),
-                                      ),
-                                    ],
-                                    decoration: InputDecoration(
-                                      labelText: '${t('cost')} (SAR)',
-                                      border: const OutlineInputBorder(),
-                                      suffixText: 'SAR',
-                                      isDense: true,
-                                    ).copyWith(contentPadding:
-                                        const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
-                                    )),
-                                    validator: (v) {
-                                      if (v == null || v.trim().isEmpty) {
-                                        return t('cost');
-                                      }
-                                      if (double.tryParse(
-                                              _sanitizeDigits(v.trim())) ==
-                                          null) {
-                                        return 'Invalid number';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ),
-                            ],
-                          );
-                        }),
+                  const SizedBox(width: 12),
+                  // Odometer
+                  Expanded(
+                    child: TextFormField(
+                      controller: _odometerController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
                       ],
-                    );
-                  },
-                  loading: () => const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    child: Center(child: CircularProgressIndicator()),
+                      decoration: InputDecoration(
+                        labelText: t('odometer'),
+                        border: const OutlineInputBorder(),
+                        isDense: true,
+                        prefixIcon: const Icon(Icons.speed_outlined, size: 18),
+                        suffixText: t('km'),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 14,
+                        ),
+                      ),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return t('odometer');
+                        }
+                        if (int.tryParse(_sanitizeDigits(v.trim())) == null) {
+                          return 'Invalid number';
+                        }
+                        return null;
+                      },
+                    ),
                   ),
-                  error: (e, st) => Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text('Error loading tasks: $e'),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              // — Shared Notes (compact) —
+              TextFormField(
+                controller: _notesController,
+                minLines: 1,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  labelText: '${t('notes')} (${t('optional')})',
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                  alignLabelWithHint: true,
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // — Task Checklist (scrollable, capped height) —
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  t('select_services'),
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+              ),
+              const SizedBox(height: 4),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 160),
+                child: Scrollbar(
+                  thumbVisibility: true,
+                  child: SingleChildScrollView(
+                    child: tasksAsync.when(
+                      data: (state) {
+                        final tasks = state.allTasks;
+                        if (tasks.isEmpty) {
+                          return Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Text(t('no_tasks_loaded')),
+                          );
+                        }
+
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: tasks.map((task) {
+                            final controller = _costControllers.putIfAbsent(
+                              task.taskKey,
+                              () => TextEditingController(),
+                            );
+                            final isSelected = _selectedTasks.contains(task.taskKey);
+
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                CheckboxListTile(
+                                  title: Text(t(task.displayNameEn)),
+                                  value: isSelected,
+                                  onChanged: (checked) {
+                                    setState(() {
+                                      if (checked == true) {
+                                        _selectedTasks.add(task.taskKey);
+                                      } else {
+                                        _selectedTasks.remove(task.taskKey);
+                                      }
+                                    });
+                                  },
+                                  dense: true,
+                                  visualDensity:
+                                      const VisualDensity(horizontal: 0, vertical: -4),
+                                  contentPadding: EdgeInsets.zero,
+                                ),
+                                if (isSelected)
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      left: 16, right: 16, bottom: 4,
+                                    ),
+                                    child: TextFormField(
+                                      controller: controller,
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
+                                              decimal: true),
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.allow(
+                                          RegExp(r'^\d*\.?\d{0,2}'),
+                                        ),
+                                      ],
+                                      decoration: InputDecoration(
+                                        labelText: '${t('cost')} (SAR)',
+                                        border: const OutlineInputBorder(),
+                                        suffixText: 'SAR',
+                                        isDense: true,
+                                      ).copyWith(contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      )),
+                                      validator: (v) {
+                                        if (v == null || v.trim().isEmpty) {
+                                          return t('cost');
+                                        }
+                                        if (double.tryParse(
+                                                _sanitizeDigits(v.trim())) ==
+                                            null) {
+                                          return 'Invalid number';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ),
+                              ],
+                            );
+                          }).toList(),
+                        );
+                      },
+                      loading: () => const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      ),
+                      error: (e, st) => Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Text('Error: $e'),
+                      ),
+                    ),
                   ),
                 ),
-
-                const SizedBox(height: 8),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

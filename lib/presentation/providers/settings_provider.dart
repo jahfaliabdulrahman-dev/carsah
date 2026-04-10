@@ -59,7 +59,7 @@ const _translations = {
   },
   'update': {'en': 'Update Odometer', 'ar': 'تحديث العداد'},
   'odometer': {'en': 'Odometer', 'ar': 'العداد'},
-  'year': {'en': 'Year', 'ar': 'السنة'},
+  'year': {'en': 'Model Year', 'ar': 'سنة الصنع'},
   'cost_trend': {'en': 'Cost Trend', 'ar': 'اتجاه التكاليف'},
   'monthly': {'en': 'Monthly', 'ar': 'شهري'},
   'total_spending': {'en': 'Total Spending', 'ar': 'إجمالي الإنفاق'},

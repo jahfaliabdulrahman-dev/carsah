@@ -49,6 +49,9 @@ const _translations = {
   // Dashboard
   'app_title': {'en': 'Sayyar', 'ar': 'سيّار'},
   'beta_badge': {'en': 'BETA', 'ar': 'نسخة تجريبية'},
+  'menu_language': {'en': 'English', 'ar': 'اللغة العربية'},
+  'menu_theme': {'en': 'Appearance', 'ar': 'المظهر'},
+  'menu_feedback': {'en': 'Feedback Hub', 'ar': 'مركز التغذية الراجعة'},
   'add_custom_task': {'en': 'Add Task', 'ar': 'إضافة مهمة'},
   'action_required': {'en': 'Action Required:', 'ar': 'إجراء مطلوب:'},
   'services_overdue': {'en': 'Services Overdue', 'ar': 'مهام متأخرة'},

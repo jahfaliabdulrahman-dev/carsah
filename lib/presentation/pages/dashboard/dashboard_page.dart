@@ -87,34 +87,61 @@ class DashboardPage extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          onPressed: () => _showFeedbackSheet(context, t),
-                          icon: const Icon(Icons.feedback_outlined),
-                          tooltip: t('feedback_hub'),
-                        ),
-                        IconButton(
-                          onPressed: () => ref
-                              .read(settingsProvider.notifier)
-                              .toggleTheme(),
-                          icon: Icon(
-                            settings.themeMode == ThemeMode.dark
-                                ? Icons.light_mode
-                                : Icons.dark_mode,
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      onSelected: (value) {
+                        switch (value) {
+                          case 'language':
+                            ref
+                                .read(settingsProvider.notifier)
+                                .toggleLocale();
+                          case 'theme':
+                            ref
+                                .read(settingsProvider.notifier)
+                                .toggleTheme();
+                          case 'feedback':
+                            _showFeedbackSheet(context, t);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'language',
+                          child: Row(
+                            children: [
+                              Icon(Icons.translate,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 20),
+                              const SizedBox(width: 12),
+                              Text(t('menu_language')),
+                            ],
                           ),
-                          tooltip: settings.themeMode == ThemeMode.dark
-                              ? 'Light Mode'
-                              : 'Dark Mode',
                         ),
-                        IconButton(
-                          onPressed: () => ref
-                              .read(settingsProvider.notifier)
-                              .toggleLocale(),
-                          icon: const Icon(Icons.language),
-                          tooltip:
-                              settings.locale == AppLocale.en ? 'عربي' : 'English',
+                        PopupMenuItem(
+                          value: 'theme',
+                          child: Row(
+                            children: [
+                              Icon(Icons.brightness_medium_outlined,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 20),
+                              const SizedBox(width: 12),
+                              Text(t('menu_theme')),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'feedback',
+                          child: Row(
+                            children: [
+                              Icon(Icons.feedback_outlined,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 20),
+                              const SizedBox(width: 12),
+                              Text(t('menu_feedback')),
+                            ],
+                          ),
                         ),
                       ],
                     ),

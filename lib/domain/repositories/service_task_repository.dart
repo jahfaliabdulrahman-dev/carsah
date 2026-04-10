@@ -12,6 +12,19 @@
 
 import '../../data/models/service_task.dart';
 
+/// Payload for batch-updating task settings (intervals + baseline).
+class TaskUpdatePayload {
+  final int? lastDoneKm;
+  final int? intervalKm;
+  final int? intervalMonths;
+
+  const TaskUpdatePayload({
+    this.lastDoneKm,
+    this.intervalKm,
+    this.intervalMonths,
+  });
+}
+
 /// Abstract contract for service task CRUD and due-date queries.
 ///
 /// Implementations MUST:
@@ -142,20 +155,20 @@ abstract class ServiceTaskRepository {
     required String taskKey,
   });
 
-  /// Batch-updates baseline completion for multiple tasks at once.
+  /// Batch-updates task settings (intervals + baselines) in one transaction.
   ///
-  /// Used by the Setup Wizard to mark tasks the user has already done.
-  /// Sets lastDoneKm for each task and lastDoneDate to today.
+  /// Used by the Setup Wizard to let users customize OEM intervals
+  /// and mark tasks as previously completed.
   ///
   /// Parameters:
   ///   [vehicleId] — The vehicle these tasks belong to.
-  ///   [baselines] — Map of taskKey -> doneAtKm.
+  ///   [updates]   — Map of taskKey -> TaskUpdatePayload.
   ///
   /// Returns:
   ///   true if all tasks were updated successfully.
-  Future<bool> batchUpdateBaselines({
+  Future<bool> batchUpdateTaskSettings({
     required int vehicleId,
-    required Map<String, int> baselines,
+    required Map<String, TaskUpdatePayload> updates,
   });
 
   /// Creates a new custom service task for a vehicle.

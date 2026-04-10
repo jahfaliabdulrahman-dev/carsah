@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models/service_task.dart';
+import '../../../domain/repositories/service_task_repository.dart' show TaskUpdatePayload;
 import '../../providers/service_task_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/vehicle_provider.dart';
@@ -14,7 +15,7 @@ import '../../providers/vehicle_provider.dart';
 /// Guides the user through 3 steps in a single scrollable form:
 ///   1. Vehicle Info (make, model, year) — required.
 ///   2. Current Odometer — required.
-///   3. Past Maintenance baselines — optional.
+///   3. Past Maintenance + editable intervals — optional.
 ///
 /// A Skip button in the AppBar lets users bypass the wizard.
 /// On Finish, all data is saved in sequence and the page closes.
@@ -33,10 +34,14 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   final _yearController = TextEditingController();
   final _odometerController = TextEditingController();
 
-  /// Maps taskKey -> doneAtKm for tasks the user marks as previously done.
+  /// Per-task controllers: baseline done_at_km.
   final Map<String, TextEditingController> _baselineControllers = {};
+  /// Per-task controllers: intervalKm override.
+  final Map<String, TextEditingController> _kmIntervalControllers = {};
+  /// Per-task controllers: intervalMonths override.
+  final Map<String, TextEditingController> _monthIntervalControllers = {};
 
-  /// Set of taskKeys the user has toggled on.
+  /// Set of taskKeys the user has toggled as "done previously".
   final Set<String> _selectedBaselines = {};
 
   bool _isSaving = false;
@@ -66,9 +71,9 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     _modelController.dispose();
     _yearController.dispose();
     _odometerController.dispose();
-    for (final c in _baselineControllers.values) {
-      c.dispose();
-    }
+    for (final c in _baselineControllers.values) c.dispose();
+    for (final c in _kmIntervalControllers.values) c.dispose();
+    for (final c in _monthIntervalControllers.values) c.dispose();
     super.dispose();
   }
 
@@ -93,22 +98,39 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
             name: '$newMake $newModel',
             year: newYear,
           );
-
       // 2. Update odometer.
       await ref.read(vehicleProvider.notifier).updateOdometer(newOdometer);
     }
 
-    // 3. Batch-update baselines for selected tasks.
-    final baselines = <String, int>{};
-    for (final taskKey in _selectedBaselines) {
-      final kmText = _baselineControllers[taskKey]?.text.trim() ?? '';
-      final km = int.tryParse(kmText);
-      if (km != null) {
-        baselines[taskKey] = km;
+    // 3. Batch-update all task settings (intervals + baselines).
+    final updates = <String, TaskUpdatePayload>{};
+    final taskState = ref.read(serviceTaskProvider).valueOrNull;
+    if (taskState != null) {
+      for (final task in taskState.allTasks) {
+        final kmInterval = int.tryParse(
+          _kmIntervalControllers[task.taskKey]?.text.trim() ?? '',
+        );
+        final monthInterval = int.tryParse(
+          _monthIntervalControllers[task.taskKey]?.text.trim() ?? '',
+        );
+        final lastDoneKm = _selectedBaselines.contains(task.taskKey)
+            ? int.tryParse(
+                _baselineControllers[task.taskKey]?.text.trim() ?? '',
+              )
+            : null;
+
+        // Only include tasks where something changed.
+        if (kmInterval != null || monthInterval != null || lastDoneKm != null) {
+          updates[task.taskKey] = TaskUpdatePayload(
+            intervalKm: kmInterval,
+            intervalMonths: monthInterval,
+            lastDoneKm: lastDoneKm,
+          );
+        }
       }
     }
-    if (baselines.isNotEmpty) {
-      await ref.read(serviceTaskProvider.notifier).batchUpdateBaselines(baselines);
+    if (updates.isNotEmpty) {
+      await ref.read(serviceTaskProvider.notifier).batchUpdateTaskSettings(updates);
     }
 
     if (mounted) Navigator.of(context).pop();
@@ -163,7 +185,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(
@@ -195,7 +217,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                       TextFormField(
                         controller: _yearController,
                         keyboardType: TextInputType.number,
@@ -222,7 +244,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
               // — Card 2: Current Odometer —
               Card(
@@ -245,7 +267,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       TextFormField(
                         controller: _odometerController,
                         keyboardType: TextInputType.number,
@@ -267,9 +289,9 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
-              // — Card 3: Past Maintenance —
+              // — Card 3: Past Maintenance + Intervals —
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -298,7 +320,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                       tasksAsync.when(
                         data: (state) {
                           final tasks = state.allTasks;
@@ -310,13 +332,28 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                           }
                           return Column(
                             children: tasks.map((task) {
-                              return _TaskBaselineTile(
+                              return _TaskSetupTile(
                                 task: task,
                                 t: t,
                                 isSelected: _selectedBaselines.contains(task.taskKey),
-                                controller: _baselineControllers.putIfAbsent(
+                                baselineController: _baselineControllers.putIfAbsent(
                                   task.taskKey,
-                                  () => TextEditingController(),
+                                  () => TextEditingController(
+                                    text: task.lastDoneKm?.toString() ?? '',
+                                  ),
+                                ),
+                                kmIntervalController: _kmIntervalControllers.putIfAbsent(
+                                  task.taskKey,
+                                  () => TextEditingController(
+                                    text: task.intervalKm?.toString() ?? '',
+                                  ),
+                                ),
+                                monthIntervalController:
+                                    _monthIntervalControllers.putIfAbsent(
+                                  task.taskKey,
+                                  () => TextEditingController(
+                                    text: task.intervalMonths?.toString() ?? '',
+                                  ),
                                 ),
                                 onToggle: (checked) {
                                   setState(() {
@@ -346,7 +383,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               // — Finish Button —
               SizedBox(
@@ -375,59 +412,122 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   }
 }
 
-/// A single task row in the Past Maintenance checklist.
-class _TaskBaselineTile extends StatelessWidget {
+/// A compact task tile showing editable intervals + optional baseline.
+class _TaskSetupTile extends StatelessWidget {
   final ServiceTask task;
   final String Function(String) t;
   final bool isSelected;
-  final TextEditingController controller;
+  final TextEditingController baselineController;
+  final TextEditingController kmIntervalController;
+  final TextEditingController monthIntervalController;
   final ValueChanged<bool?> onToggle;
 
-  const _TaskBaselineTile({
+  const _TaskSetupTile({
     required this.task,
     required this.t,
     required this.isSelected,
-    required this.controller,
+    required this.baselineController,
+    required this.kmIntervalController,
+    required this.monthIntervalController,
     required this.onToggle,
   });
 
   @override
   Widget build(BuildContext context) {
+    final hasKm = task.intervalKm != null;
+    final hasMonths = task.intervalMonths != null;
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 6),
       child: Column(
         children: [
-          SwitchListTile(
-            title: Text(
-              t(task.displayNameEn),
-              style: const TextStyle(fontSize: 14),
-            ),
-            subtitle: task.intervalKm != null
-                ? Text(
-                    '${t('every_km')} ${task.intervalKm} ${t('km')}',
-                    style: const TextStyle(fontSize: 12),
-                  )
-                : null,
-            value: isSelected,
-            onChanged: onToggle,
-            dense: true,
-            contentPadding: EdgeInsets.zero,
+          // Task name + switch
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  t(task.displayNameEn),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                ),
+              ),
+              SizedBox(
+                height: 32,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Switch(
+                    value: isSelected,
+                    onChanged: onToggle,
+                  ),
+                ),
+              ),
+            ],
           ),
+
+          // Editable interval fields (always visible)
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Row(
+              children: [
+                if (hasKm) ...[
+                  Expanded(
+                    child: TextFormField(
+                      controller: kmIntervalController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: InputDecoration(
+                        labelText: t('interval_km'),
+                        border: const OutlineInputBorder(),
+                        isDense: true,
+                        suffixText: t('km'),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 8,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                if (hasKm && hasMonths) const SizedBox(width: 8),
+                if (hasMonths) ...[
+                  Expanded(
+                    child: TextFormField(
+                      controller: monthIntervalController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: InputDecoration(
+                        labelText: t('interval_months'),
+                        border: const OutlineInputBorder(),
+                        isDense: true,
+                        suffixText: t('months'),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 8,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          // Baseline field (only when toggled on)
           if (isSelected)
             Padding(
-              padding: const EdgeInsets.only(left: 16, bottom: 4),
+              padding: const EdgeInsets.only(left: 4, top: 6),
               child: TextFormField(
-                controller: controller,
+                controller: baselineController,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(
                   labelText: t('done_at_km'),
                   border: const OutlineInputBorder(),
                   isDense: true,
+                  prefixIcon: const Icon(Icons.check_circle_outline, size: 18),
                   suffixText: t('km'),
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
+                    horizontal: 8,
+                    vertical: 8,
                   ),
                 ),
               ),

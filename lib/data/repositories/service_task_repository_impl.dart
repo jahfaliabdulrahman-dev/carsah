@@ -256,15 +256,15 @@ class ServiceTaskRepositoryImpl implements ServiceTaskRepository {
   }
 
   @override
-  Future<bool> batchUpdateBaselines({
+  Future<bool> batchUpdateTaskSettings({
     required int vehicleId,
-    required Map<String, int> baselines,
+    required Map<String, TaskUpdatePayload> updates,
   }) async {
     try {
       final now = DateTime.now();
       final tasksToUpdate = <ServiceTask>[];
 
-      for (final entry in baselines.entries) {
+      for (final entry in updates.entries) {
         final task = await isar.serviceTasks
             .filter()
             .vehicleIdEqualTo(vehicleId)
@@ -272,8 +272,13 @@ class ServiceTaskRepositoryImpl implements ServiceTaskRepository {
             .findFirst();
 
         if (task != null) {
-          task.lastDoneKm = entry.value;
-          task.lastDoneDate = now;
+          final payload = entry.value;
+          if (payload.intervalKm != null) task.intervalKm = payload.intervalKm;
+          if (payload.intervalMonths != null) task.intervalMonths = payload.intervalMonths;
+          if (payload.lastDoneKm != null) {
+            task.lastDoneKm = payload.lastDoneKm;
+            task.lastDoneDate = now;
+          }
           tasksToUpdate.add(task);
         }
       }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/datasources/local/isar_provider.dart';
 import '../../data/models/service_task.dart';
 import '../../data/repositories/service_task_repository_impl.dart';
+import '../../domain/repositories/service_task_repository.dart' show TaskUpdatePayload;
 import 'vehicle_provider.dart';
 
 /// ============================================================
@@ -334,15 +335,15 @@ class ServiceTaskNotifier extends AsyncNotifier<ServiceTaskState> {
     return success;
   }
 
-  /// Batch-updates baselines for multiple tasks (Setup Wizard).
-  Future<bool> batchUpdateBaselines(Map<String, int> baselines) async {
+  /// Batch-updates task settings (intervals + baselines) for Setup Wizard.
+  Future<bool> batchUpdateTaskSettings(Map<String, TaskUpdatePayload> updates) async {
     final vehicleState = await ref.watch(vehicleProvider.future);
     final vehicle = vehicleState.activeVehicle;
     if (vehicle == null) return false;
 
-    final success = await _repo.batchUpdateBaselines(
+    final success = await _repo.batchUpdateTaskSettings(
       vehicleId: vehicle.id,
-      baselines: baselines,
+      updates: updates,
     );
     if (success) {
       ref.invalidateSelf();

@@ -56,13 +56,14 @@ abstract class VehicleRepository {
   ///   The persisted vehicle with its generated [Id] field.
   Future<Vehicle> createVehicle(Vehicle vehicle, {bool setAsActive = false});
 
-  /// Updates the make, model, and display name of a vehicle.
+  /// Updates the make, model, display name, and year of a vehicle.
   ///
   /// Parameters:
   ///   [vehicleId] — The ID of the vehicle to update.
   ///   [make] — New make (e.g., "Tank").
   ///   [model] — New model (e.g., "300").
   ///   [name] — New display name (e.g., "Tank 300").
+  ///   [year] — Optional model year.
   ///
   /// Returns:
   ///   true if the vehicle was found and updated.
@@ -72,6 +73,7 @@ abstract class VehicleRepository {
     required String make,
     required String model,
     required String name,
+    int? year,
   });
 
   /// Deletes a vehicle by ID.
@@ -156,6 +158,7 @@ class VehicleRepositoryImpl implements VehicleRepository {
     required String make,
     required String model,
     required String name,
+    int? year,
   }) async {
     try {
       final vehicle = await isar.vehicles.get(vehicleId);
@@ -164,6 +167,7 @@ class VehicleRepositoryImpl implements VehicleRepository {
       vehicle.make = make;
       vehicle.model = model;
       vehicle.name = name;
+      if (year != null) vehicle.year = year;
 
       await isar.writeTxn(() async {
         await isar.vehicles.put(vehicle);

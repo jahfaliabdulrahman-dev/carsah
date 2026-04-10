@@ -57,7 +57,7 @@ const _translations = {
     'en': 'All Systems Go. Vehicle in optimal health',
     'ar': 'المركبة في حالة ممتازة'
   },
-  'update': {'en': 'Update', 'ar': 'تحديث'},
+  'update': {'en': 'Update Odometer', 'ar': 'تحديث العداد'},
   'odometer': {'en': 'Odometer', 'ar': 'العداد'},
   'year': {'en': 'Year', 'ar': 'السنة'},
   'cost_trend': {'en': 'Cost Trend', 'ar': 'اتجاه التكاليف'},
@@ -100,6 +100,8 @@ const _translations = {
   'cancel': {'en': 'Cancel', 'ar': 'إلغاء'},
   'delete': {'en': 'Delete', 'ar': 'حذف'},
   'save': {'en': 'Save', 'ar': 'حفظ'},
+  'create': {'en': 'Create', 'ar': 'إنشاء'},
+  'save_all': {'en': 'Save All', 'ar': 'حفظ الكل'},
   'delete_record': {'en': 'Delete Record', 'ar': 'حذف السجل'},
   'delete_task': {'en': 'Delete Task', 'ar': 'حذف المهمة'},
   'edit': {'en': 'Edit', 'ar': 'تعديل'},
@@ -130,6 +132,12 @@ const _translations = {
   'make': {'en': 'Make', 'ar': 'الماركة'},
   'model': {'en': 'Model', 'ar': 'الموديل'},
   'my_car': {'en': 'My Car', 'ar': 'سيارتي'},
+  'choose_service': {'en': 'Choose the service', 'ar': 'اختر نوع الصيانة'},
+  'select_services': {'en': 'Select Services', 'ar': 'اختر الخدمات'},
+  'no_tasks_loaded': {
+    'en': 'No service tasks loaded.',
+    'ar': 'لا توجد مهام صيانة.'
+  },
 };
 
 /// Immutable settings state.

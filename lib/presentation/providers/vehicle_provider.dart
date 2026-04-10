@@ -78,18 +78,20 @@ class VehicleNotifier extends AsyncNotifier<VehicleState> {
     }
   }
 
-  /// Updates the make, model, and display name of a vehicle.
+  /// Updates the make, model, display name, and year of a vehicle.
   Future<void> updateVehicle({
     required int vehicleId,
     required String make,
     required String model,
     required String name,
+    int? year,
   }) async {
     final success = await _repo.updateVehicle(
       vehicleId: vehicleId,
       make: make,
       model: model,
       name: name,
+      year: year,
     );
 
     if (success) {

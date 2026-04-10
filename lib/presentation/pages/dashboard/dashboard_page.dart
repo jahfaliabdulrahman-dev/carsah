@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -416,6 +417,9 @@ class DashboardPage extends ConsumerWidget {
 
     final makeController = TextEditingController(text: vehicle.make);
     final modelController = TextEditingController(text: vehicle.model);
+    final yearController = TextEditingController(
+      text: vehicle.year > 0 ? vehicle.year.toString() : '',
+    );
     final formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -458,6 +462,29 @@ class DashboardPage extends ConsumerWidget {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: yearController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(4),
+                ],
+                decoration: InputDecoration(
+                  labelText: t('year'),
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.calendar_today_outlined),
+                ),
+                validator: (v) {
+                  if (v != null && v.trim().isNotEmpty) {
+                    final parsed = int.tryParse(v.trim());
+                    if (parsed == null || parsed < 1900 || parsed > 2100) {
+                      return 'Invalid year';
+                    }
+                  }
+                  return null;
+                },
+              ),
             ],
           ),
         ),
@@ -471,11 +498,14 @@ class DashboardPage extends ConsumerWidget {
               if (!formKey.currentState!.validate()) return;
               final newMake = makeController.text.trim();
               final newModel = modelController.text.trim();
+              final yearText = yearController.text.trim();
+              final newYear = yearText.isNotEmpty ? int.tryParse(yearText) : null;
               ref.read(vehicleProvider.notifier).updateVehicle(
                     vehicleId: vehicle.id,
                     make: newMake,
                     model: newModel,
                     name: '$newMake $newModel',
+                    year: newYear,
                   );
               Navigator.of(ctx).pop();
             },

@@ -186,7 +186,7 @@ class _AddCustomTaskDialogState extends ConsumerState<AddCustomTaskDialog> {
                   height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Create'),
+              : Text(t('create')),
         ),
       ],
     );

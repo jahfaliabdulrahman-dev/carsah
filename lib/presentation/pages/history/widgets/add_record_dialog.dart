@@ -360,9 +360,9 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog> {
                   data: (state) {
                     final tasks = state.allTasks;
                     if (tasks.isEmpty) {
-                      return const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Text('No service tasks loaded.'),
+                      return Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(t('no_tasks_loaded')),
                       );
                     }
 
@@ -370,7 +370,7 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Select Services',
+                          t('select_services'),
                           style: Theme.of(context).textTheme.labelLarge,
                         ),
                         const SizedBox(height: 8),
@@ -471,7 +471,7 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog> {
                   height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Save All'),
+              : Text(t('save_all')),
         ),
       ],
     );

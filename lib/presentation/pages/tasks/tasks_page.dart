@@ -1,8 +1,9 @@
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/cost_predictor.dart';
+import '../../../presentation/providers/maintenance_provider.dart';
 import '../../../presentation/providers/service_task_provider.dart';
 import '../../../presentation/providers/settings_provider.dart';
 import '../../../presentation/providers/vehicle_provider.dart';
@@ -28,6 +29,8 @@ class TasksPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tasksAsync = ref.watch(serviceTaskProvider);
     final vehicleAsync = ref.watch(vehicleProvider);
+    final maintenanceAsync = ref.watch(maintenanceProvider);
+    final allRecords = maintenanceAsync.valueOrNull?.records ?? [];
     final t = ref.watch(settingsProvider).t;
     final isArabic = ref.watch(settingsProvider).isRtl;
 
@@ -120,6 +123,8 @@ class TasksPage extends ConsumerWidget {
                     nextDueKm: nextDue.nextDueKm,
                     nextDueDate: nextDue.nextDueDate,
                     currentOdometer: currentOdometer,
+                    predictedCost:
+                        calculatePredictedCost(task.taskKey, allRecords),
                     t: t,
                     isArabic: isArabic,
                   );
@@ -146,6 +151,8 @@ class TasksPage extends ConsumerWidget {
                     nextDueKm: nextDue.nextDueKm,
                     nextDueDate: nextDue.nextDueDate,
                     currentOdometer: currentOdometer,
+                    predictedCost:
+                        calculatePredictedCost(task.taskKey, allRecords),
                     t: t,
                     isArabic: isArabic,
                   );
@@ -172,6 +179,8 @@ class TasksPage extends ConsumerWidget {
                     nextDueKm: nextDue.nextDueKm,
                     nextDueDate: nextDue.nextDueDate,
                     currentOdometer: currentOdometer,
+                    predictedCost:
+                        calculatePredictedCost(task.taskKey, allRecords),
                     t: t,
                     isArabic: isArabic,
                   );
@@ -203,6 +212,7 @@ class TasksPage extends ConsumerWidget {
     int? nextDueKm,
     DateTime? nextDueDate,
     required int currentOdometer,
+    double? predictedCost,
     required String Function(String) t,
     required bool isArabic,
   }) {
@@ -249,6 +259,7 @@ class TasksPage extends ConsumerWidget {
           nextDueKm: nextDueKm,
           nextDueDate: nextDueDate,
           currentOdometerKm: currentOdometer,
+          predictedCost: predictedCost,
           t: t,
           isArabic: isArabic,
           onEdit: () {
@@ -346,6 +357,7 @@ class _TaskListItem extends StatelessWidget {
   final int? nextDueKm;
   final DateTime? nextDueDate;
   final int currentOdometerKm;
+  final double? predictedCost;
   final String Function(String) t;
   final bool isArabic;
   final VoidCallback onEdit;
@@ -357,6 +369,7 @@ class _TaskListItem extends StatelessWidget {
     this.nextDueKm,
     this.nextDueDate,
     required this.currentOdometerKm,
+    this.predictedCost,
     required this.t,
     required this.isArabic,
     required this.onEdit,
@@ -455,6 +468,45 @@ class _TaskListItem extends StatelessWidget {
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 11,
+                  ),
+                ),
+              ),
+            if (predictedCost != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .tertiaryContainer,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.auto_awesome,
+                        size: 12,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onTertiaryContainer,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${t('predicted_cost')}${predictedCost!.toStringAsFixed(0)} ${t('currency')}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onTertiaryContainer,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

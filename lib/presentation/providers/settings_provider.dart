@@ -188,6 +188,7 @@ const _translations = {
   'total_cost': {'en': 'Total Cost', 'ar': 'إجمالي التكلفة'},
   'services_performed': {'en': 'Services Performed', 'ar': 'الخدمات المنجزة'},
   'labor_cost': {'en': 'Labor', 'ar': 'العمالة'},
+  'predicted_cost': {'en': 'Est: ', 'ar': 'متوقع: '},
 };
 
 /// Immutable settings state.

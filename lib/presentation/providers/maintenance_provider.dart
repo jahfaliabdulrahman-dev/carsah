@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/datasources/local/isar_provider.dart';
 import '../../data/models/maintenance_record.dart';
 import '../../data/repositories/maintenance_repository_impl.dart';
+import '../../data/repositories/service_task_repository_impl.dart';
 import 'service_task_provider.dart';
 import 'vehicle_provider.dart';
 
@@ -62,6 +63,51 @@ class MaintenanceNotifier extends AsyncNotifier<MaintenanceState> {
         ref.watch(isarProvider),
       );
 
+  /// One-time migration: links old records without taskKeys to their tasks.
+  ///
+  /// Old records store only display names in partsReplaced. This method
+  /// finds matching ServiceTask entries and populates the taskKeys field.
+  /// Runs silently on each build — safe to call multiple times (idempotent).
+  Future<void> _migrateOldRecords(int vehicleId) async {
+    final records = await _repo.getRecordsByVehicle(vehicleId);
+
+    // Get tasks via serviceTaskRepo.
+    final taskRepo = ServiceTaskRepositoryImpl(ref.watch(isarProvider));
+    final tasks = await taskRepo.getAllTasks(vehicleId);
+
+    final toUpdate = <MaintenanceRecord>[];
+
+    for (final record in records) {
+      if (record.taskKeys != null && record.taskKeys!.isNotEmpty) continue;
+      if (record.partsReplaced == null || record.partsReplaced!.isEmpty) continue;
+
+      final matchedKeys = <String>[];
+      for (final partName in record.partsReplaced!) {
+        final match = tasks.where((task) =>
+            task.displayNameEn == partName ||
+            task.displayNameAr == partName ||
+            task.taskKey == partName);
+        if (match.isNotEmpty) {
+          matchedKeys.add(match.first.taskKey);
+        }
+      }
+
+      if (matchedKeys.isNotEmpty) {
+        record.taskKeys = matchedKeys;
+        toUpdate.add(record);
+      }
+    }
+
+    if (toUpdate.isNotEmpty) {
+      final isar = ref.watch(isarProvider);
+      await isar.writeTxn(() async {
+        for (final r in toUpdate) {
+          await isar.maintenanceRecords.put(r);
+        }
+      });
+    }
+  }
+
   @override
   Future<MaintenanceState> build() async {
     // We need the active vehicle's ID to load its records.
@@ -71,6 +117,9 @@ class MaintenanceNotifier extends AsyncNotifier<MaintenanceState> {
     if (vehicle == null) {
       return const MaintenanceState();
     }
+
+    // Silent migration: link old records to taskKeys.
+    await _migrateOldRecords(vehicle.id);
 
     final records = await _repo.getRecordsByVehicle(vehicle.id);
     final totalCount = await _repo.getRecordCount(vehicle.id);

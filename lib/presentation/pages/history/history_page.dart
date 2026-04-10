@@ -12,16 +12,19 @@ import 'widgets/edit_record_dialog.dart';
 
 /// Resolves the display name for a record's service type.
 /// Uses taskKey lookup first (dynamic), falls back to stored name.
+/// Bilingual-aware: returns Arabic or English based on locale.
 String resolveServiceName(
   MaintenanceRecord record,
   List<ServiceTask> allTasks,
-  String Function(String) t,
-) {
+  String Function(String) t, {
+  bool isArabic = false,
+}) {
   if (record.taskKeys != null && record.taskKeys!.isNotEmpty) {
     final taskKey = record.taskKeys!.first;
-    final match = allTasks.where((t) => t.taskKey == taskKey);
+    final match = allTasks.where((task) => task.taskKey == taskKey);
     if (match.isNotEmpty) {
-      return t(match.first.displayNameEn);
+      final task = match.first;
+      return isArabic ? task.displayNameAr : t(task.displayNameEn);
     }
   }
   return t(record.serviceType);
@@ -42,7 +45,9 @@ class HistoryPage extends ConsumerWidget {
     final maintenanceAsync = ref.watch(maintenanceProvider);
     final tasksAsync = ref.watch(serviceTaskProvider);
     final allTasks = tasksAsync.valueOrNull?.allTasks ?? [];
-    final t = ref.watch(settingsProvider).t;
+    final settings = ref.watch(settingsProvider);
+    final t = settings.t;
+    final isArabic = settings.isRtl;
 
     return Scaffold(
       appBar: AppBar(
@@ -111,7 +116,7 @@ class HistoryPage extends ConsumerWidget {
                 ),
                 child: _HistoryCard(
                   record: record,
-                  resolvedName: resolveServiceName(record, allTasks, t),
+                  resolvedName: resolveServiceName(record, allTasks, t, isArabic: isArabic),
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(

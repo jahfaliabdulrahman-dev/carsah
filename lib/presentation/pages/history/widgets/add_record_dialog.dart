@@ -170,6 +170,7 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog> {
         : _notesController.text.trim();
 
     final taskState = ref.read(serviceTaskProvider).valueOrNull;
+    final isArabic = ref.read(settingsProvider).isRtl;
     if (taskState == null) {
       _showError('Tasks not loaded');
       setState(() => _isSubmitting = false);
@@ -177,8 +178,9 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog> {
     }
 
     final taskMap = <String, String>{};
-    for (final t in taskState.allTasks) {
-      taskMap[t.taskKey] = t.displayNameEn;
+    for (final task in taskState.allTasks) {
+      taskMap[task.taskKey] =
+          isArabic ? task.displayNameAr : task.displayNameEn;
     }
 
     int savedCount = 0;
@@ -254,6 +256,7 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog> {
     final tasksAsync = ref.watch(serviceTaskProvider);
     final settings = ref.watch(settingsProvider);
     final t = settings.t;
+    final isArabic = settings.isRtl;
 
     return AlertDialog(
       title: Text(t('log_service')),
@@ -395,8 +398,12 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog> {
                             return Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                CheckboxListTile(
-                                  title: Text(t(task.displayNameEn)),
+                              CheckboxListTile(
+                                title: Text(
+                                  isArabic
+                                      ? task.displayNameAr
+                                      : t(task.displayNameEn),
+                                ),
                                   value: isSelected,
                                   onChanged: (checked) {
                                     setState(() {

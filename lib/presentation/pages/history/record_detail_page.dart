@@ -26,7 +26,8 @@ class RecordDetailPage extends ConsumerWidget {
     final t = settings.t;
     final colorScheme = Theme.of(context).colorScheme;
     final allTasks = ref.watch(serviceTaskProvider).valueOrNull?.allTasks ?? [];
-    final resolvedName = resolveServiceName(record, allTasks, t);
+    final isArabic = settings.isRtl;
+    final resolvedName = resolveServiceName(record, allTasks, t, isArabic: isArabic);
 
     return Scaffold(
       appBar: AppBar(

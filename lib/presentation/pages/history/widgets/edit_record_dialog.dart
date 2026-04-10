@@ -33,6 +33,8 @@ class EditRecordDialog extends ConsumerStatefulWidget {
 
 class _EditRecordDialogState extends ConsumerState<EditRecordDialog> {
   late final TextEditingController _odometerController;
+  late final TextEditingController _partsCostController;
+  late final TextEditingController _laborCostController;
   late final TextEditingController _notesController;
   late DateTime _selectedDate;
   bool _isSaving = false;
@@ -43,6 +45,12 @@ class _EditRecordDialogState extends ConsumerState<EditRecordDialog> {
     _odometerController = TextEditingController(
       text: widget.record.odometerKm.toString(),
     );
+    _partsCostController = TextEditingController(
+      text: widget.record.partsCostSar.toStringAsFixed(2),
+    );
+    _laborCostController = TextEditingController(
+      text: widget.record.laborCostSar.toStringAsFixed(2),
+    );
     _notesController = TextEditingController(
       text: widget.record.notes ?? '',
     );
@@ -52,6 +60,8 @@ class _EditRecordDialogState extends ConsumerState<EditRecordDialog> {
   @override
   void dispose() {
     _odometerController.dispose();
+    _partsCostController.dispose();
+    _laborCostController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -61,6 +71,12 @@ class _EditRecordDialogState extends ConsumerState<EditRecordDialog> {
 
     final newOdometer =
         int.tryParse(_odometerController.text.trim()) ?? widget.record.odometerKm;
+    final newPartsCost =
+        double.tryParse(_partsCostController.text.trim()) ??
+            widget.record.partsCostSar;
+    final newLaborCost =
+        double.tryParse(_laborCostController.text.trim()) ??
+            widget.record.laborCostSar;
     final newNotes = _notesController.text.trim().isEmpty
         ? null
         : _notesController.text.trim();
@@ -71,9 +87,9 @@ class _EditRecordDialogState extends ConsumerState<EditRecordDialog> {
       serviceType: widget.record.serviceType,
       notes: newNotes,
       odometerKm: newOdometer,
-      totalCostSar: widget.record.totalCostSar,
-      partsCostSar: widget.record.partsCostSar,
-      laborCostSar: widget.record.laborCostSar,
+      totalCostSar: newPartsCost + newLaborCost,
+      partsCostSar: newPartsCost,
+      laborCostSar: newLaborCost,
       partsReplaced: widget.record.partsReplaced,
       taskKeys: widget.record.taskKeys,
       providerName: widget.record.providerName,
@@ -170,6 +186,58 @@ class _EditRecordDialogState extends ConsumerState<EditRecordDialog> {
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            // — Parts Cost + Labor Cost (side by side) —
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _partsCostController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d*\.?\d{0,2}'),
+                      ),
+                    ],
+                    decoration: InputDecoration(
+                      labelText: t('part_cost'),
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                      suffixText: 'SAR',
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextFormField(
+                    controller: _laborCostController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d*\.?\d{0,2}'),
+                      ),
+                    ],
+                    decoration: InputDecoration(
+                      labelText: t('labor_cost'),
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                      suffixText: 'SAR',
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
                       ),
                     ),
                   ),

@@ -9,6 +9,7 @@ import '../../../presentation/providers/maintenance_provider.dart';
 import '../../../presentation/providers/service_task_provider.dart';
 import '../../../presentation/providers/settings_provider.dart';
 import '../../../presentation/providers/vehicle_provider.dart';
+import '../setup/setup_wizard_page.dart';
 import 'widgets/cost_trend_chart.dart';
 import 'widgets/odometer_update_dialog.dart';
 
@@ -199,6 +200,24 @@ class DashboardPage extends ConsumerWidget {
                       ),
                     ),
                   ),
+                ),
+              ),
+            ),
+
+            // — Setup Wizard Entry —
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const SetupWizardPage(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.build_circle_outlined, size: 20),
+                  label: Text(t('setup_wizard')),
                 ),
               ),
             ),

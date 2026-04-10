@@ -334,6 +334,22 @@ class ServiceTaskNotifier extends AsyncNotifier<ServiceTaskState> {
     return success;
   }
 
+  /// Batch-updates baselines for multiple tasks (Setup Wizard).
+  Future<bool> batchUpdateBaselines(Map<String, int> baselines) async {
+    final vehicleState = await ref.watch(vehicleProvider.future);
+    final vehicle = vehicleState.activeVehicle;
+    if (vehicle == null) return false;
+
+    final success = await _repo.batchUpdateBaselines(
+      vehicleId: vehicle.id,
+      baselines: baselines,
+    );
+    if (success) {
+      ref.invalidateSelf();
+    }
+    return success;
+  }
+
   /// Manually refreshes the task state (e.g., after user returns
   /// from a maintenance log screen).
   Future<void> refresh() async {

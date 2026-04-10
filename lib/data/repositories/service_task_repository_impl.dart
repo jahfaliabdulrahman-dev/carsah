@@ -255,6 +255,41 @@ class ServiceTaskRepositoryImpl implements ServiceTaskRepository {
     }
   }
 
+  @override
+  Future<bool> batchUpdateBaselines({
+    required int vehicleId,
+    required Map<String, int> baselines,
+  }) async {
+    try {
+      final now = DateTime.now();
+      final tasksToUpdate = <ServiceTask>[];
+
+      for (final entry in baselines.entries) {
+        final task = await isar.serviceTasks
+            .filter()
+            .vehicleIdEqualTo(vehicleId)
+            .taskKeyEqualTo(entry.key)
+            .findFirst();
+
+        if (task != null) {
+          task.lastDoneKm = entry.value;
+          task.lastDoneDate = now;
+          tasksToUpdate.add(task);
+        }
+      }
+
+      if (tasksToUpdate.isEmpty) return true;
+
+      await isar.writeTxn(() async {
+        await isar.serviceTasks.putAll(tasksToUpdate);
+      });
+
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   // ============================================================
   // CREATE — Custom Tasks
   // ============================================================

@@ -148,6 +148,16 @@ const _translations = {
     'en': 'No service tasks loaded.',
     'ar': 'لا توجد مهام صيانة.'
   },
+
+  // Setup Wizard
+  'setup_wizard': {'en': 'Setup Wizard', 'ar': 'معالج الإعداد'},
+  'vehicle_info': {'en': 'Vehicle Info', 'ar': 'بيانات المركبة'},
+  'current_state': {'en': 'Current Odometer', 'ar': 'العداد الحالي'},
+  'past_maintenance': {'en': 'Past Maintenance', 'ar': 'الصيانات السابقة'},
+  'mark_as_done': {'en': 'Done previously', 'ar': 'أُنجزت مسبقاً'},
+  'done_at_km': {'en': 'Done at (KM)', 'ar': 'تمت عند (كم)'},
+  'finish_setup': {'en': 'Finish Setup', 'ar': 'إنهاء الإعداد'},
+  'skip_for_now': {'en': 'Skip', 'ar': 'تخطي'},
 };
 
 /// Immutable settings state.

@@ -142,6 +142,22 @@ abstract class ServiceTaskRepository {
     required String taskKey,
   });
 
+  /// Batch-updates baseline completion for multiple tasks at once.
+  ///
+  /// Used by the Setup Wizard to mark tasks the user has already done.
+  /// Sets lastDoneKm for each task and lastDoneDate to today.
+  ///
+  /// Parameters:
+  ///   [vehicleId] — The vehicle these tasks belong to.
+  ///   [baselines] — Map of taskKey -> doneAtKm.
+  ///
+  /// Returns:
+  ///   true if all tasks were updated successfully.
+  Future<bool> batchUpdateBaselines({
+    required int vehicleId,
+    required Map<String, int> baselines,
+  });
+
   /// Creates a new custom service task for a vehicle.
   Future<bool> createTask(ServiceTask task);
 

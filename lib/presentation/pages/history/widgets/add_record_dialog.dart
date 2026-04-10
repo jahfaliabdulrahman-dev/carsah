@@ -43,6 +43,7 @@ class AddBatchRecordDialog extends ConsumerStatefulWidget {
 class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog> {
   final _formKey = GlobalKey<FormState>();
   final _odometerController = TextEditingController();
+  final _laborController = TextEditingController();
   final _notesController = TextEditingController();
 
   /// Maps taskKey -> cost controller for each task in the checklist.
@@ -74,6 +75,7 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog> {
   @override
   void dispose() {
     _odometerController.dispose();
+    _laborController.dispose();
     _notesController.dispose();
     for (final c in _costControllers.values) {
       c.dispose();
@@ -169,6 +171,12 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog> {
         ? null
         : _notesController.text.trim();
 
+    // Read and distribute labor cost evenly across selected tasks.
+    final laborText = _sanitizeDigits(_laborController.text.trim());
+    final totalLaborCost = double.tryParse(laborText) ?? 0.0;
+    final taskCount = _selectedTasks.length;
+    final laborPerTask = taskCount > 0 ? totalLaborCost / taskCount : 0.0;
+
     final taskState = ref.read(serviceTaskProvider).valueOrNull;
     final isArabic = ref.read(settingsProvider).isRtl;
     if (taskState == null) {
@@ -189,16 +197,16 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog> {
     for (final taskKey in _selectedTasks) {
       final costText = _costControllers[taskKey]?.text.trim() ?? '';
       final sanitizedCost = _sanitizeDigits(costText);
-      final cost = double.tryParse(sanitizedCost) ?? 0.0;
+      final partsCost = double.tryParse(sanitizedCost) ?? 0.0;
 
       final record = MaintenanceRecord(
         vehicleId: vehicleId,
         serviceType: taskMap[taskKey] ?? taskKey,
         notes: sharedNotes,
         odometerKm: odometer,
-        totalCostSar: cost,
-        partsCostSar: cost,
-        laborCostSar: 0.0,
+        totalCostSar: partsCost + laborPerTask,
+        partsCostSar: partsCost,
+        laborCostSar: laborPerTask,
         partsReplaced: [taskMap[taskKey] ?? taskKey],
         taskKeys: [taskKey],
         serviceDate: _selectedDate,
@@ -346,11 +354,35 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog> {
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+                const SizedBox(height: 12),
 
-              // — Shared Notes (compact) —
-              TextFormField(
-                controller: _notesController,
+                // — Shared Labor Cost —
+                TextFormField(
+                  controller: _laborController,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                      RegExp(r'^\d*\.?\d{0,2}'),
+                    ),
+                  ],
+                  decoration: InputDecoration(
+                    labelText: '${t('labor_cost')} (SAR)',
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                    prefixIcon: const Icon(Icons.engineering_outlined, size: 18),
+                    suffixText: 'SAR',
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // — Shared Notes (compact) —
+                TextFormField(
+                  controller: _notesController,
                 minLines: 1,
                 maxLines: 2,
                 decoration: InputDecoration(

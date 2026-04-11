@@ -207,6 +207,16 @@ const _translations = {
     'ar': 'أكمل إعداد سجل صيانة سيارتك'
   },
   'setup_banner_action': {'en': 'Start Wizard', 'ar': 'بدء المعالج'},
+
+  // Setup Wizard — 2-Step
+  'step_config': {'en': 'Task Setup', 'ar': 'إعداد المهام'},
+  'step_history': {'en': 'History', 'ar': 'السجلات السابقة'},
+  'next_step': {'en': 'Next', 'ar': 'التالي'},
+  'back': {'en': 'Back', 'ar': 'رجوع'},
+  'no_tasks_selected': {
+    'en': 'No tasks selected. Go back and enable at least one.',
+    'ar': 'لم يتم اختيار مهام. عد وفعّل مهمة واحدة على الأقل.'
+  },
 };
 
 /// Immutable settings state.

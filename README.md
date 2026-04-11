@@ -1,4 +1,4 @@
-# 🚗 Sayyar — Smart Vehicle Maintenance Tracker
+# 🚗 CarSah (كار-صح) — Smart Vehicle Maintenance Tracker
 
 A bilingual (AR/EN) mobile app that transforms vehicle maintenance from reactive guesswork into **strategic, data-driven planning**.
 
@@ -76,7 +76,7 @@ flutter build apk --release
 
 ## Project Origin
 
-Born from real frustration maintaining a **Tank 300** — factory manuals are rigid, life is not. Sayyar makes invisible technical debt visible and manageable.
+Born from real frustration maintaining a **Tank 300** — factory manuals are rigid, life is not. CarSah makes invisible technical debt visible and manageable.
 
 ---
 

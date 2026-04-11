@@ -56,7 +56,7 @@ class DashboardPage extends ConsumerWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Sayyar',
+                          t('app_title'),
                           style: Theme.of(context)
                               .textTheme
                               .headlineSmall
@@ -584,9 +584,9 @@ class DashboardPage extends ConsumerWidget {
 
   /// Feedback channel URLs.
   static const _whatsappUrl =
-      'https://wa.me/966543190284?text=Hello%20Sayyar%20Team';
+      'https://wa.me/966543190284?text=Hello%20CarSah%20Team';
   static const _emailUrl =
-      'mailto:jahfaliabdulrahman@gmail.com?subject=Sayyar%20App%20Feedback';
+      'mailto:jahfaliabdulrahman@gmail.com?subject=CarSah%20App%20Feedback';
   static const _surveyUrl = 'https://forms.gle/72dJFFKmubRkp5Cz8';
 
   /// Shows the Beta Feedback Hub.

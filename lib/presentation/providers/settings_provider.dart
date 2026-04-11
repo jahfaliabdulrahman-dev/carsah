@@ -47,7 +47,7 @@ const _translations = {
   'transmission_fluid': {'en': 'Transmission Fluid', 'ar': 'زيت القير'},
 
   // Dashboard
-  'app_title': {'en': 'Sayyar', 'ar': 'سيّار'},
+  'app_title': {'en': 'CarSah', 'ar': 'كار-صح'},
   'beta_badge': {'en': 'BETA', 'ar': 'نسخة تجريبية'},
   'menu_language': {'en': 'English', 'ar': 'اللغة العربية'},
   'menu_theme': {'en': 'Appearance', 'ar': 'المظهر'},

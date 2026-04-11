@@ -32,28 +32,33 @@ const VehicleSchema = CollectionSchema(
       name: r'isActive',
       type: IsarType.bool,
     ),
-    r'make': PropertySchema(
+    r'isSetupDismissed': PropertySchema(
       id: 3,
+      name: r'isSetupDismissed',
+      type: IsarType.bool,
+    ),
+    r'make': PropertySchema(
+      id: 4,
       name: r'make',
       type: IsarType.string,
     ),
     r'model': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'model',
       type: IsarType.string,
     ),
     r'name': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'name',
       type: IsarType.string,
     ),
     r'vin': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'vin',
       type: IsarType.string,
     ),
     r'year': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'year',
       type: IsarType.long,
     )
@@ -99,11 +104,12 @@ void _vehicleSerialize(
   writer.writeDateTime(offsets[0], object.addedAt);
   writer.writeLong(offsets[1], object.currentOdometerKm);
   writer.writeBool(offsets[2], object.isActive);
-  writer.writeString(offsets[3], object.make);
-  writer.writeString(offsets[4], object.model);
-  writer.writeString(offsets[5], object.name);
-  writer.writeString(offsets[6], object.vin);
-  writer.writeLong(offsets[7], object.year);
+  writer.writeBool(offsets[3], object.isSetupDismissed);
+  writer.writeString(offsets[4], object.make);
+  writer.writeString(offsets[5], object.model);
+  writer.writeString(offsets[6], object.name);
+  writer.writeString(offsets[7], object.vin);
+  writer.writeLong(offsets[8], object.year);
 }
 
 Vehicle _vehicleDeserialize(
@@ -117,11 +123,12 @@ Vehicle _vehicleDeserialize(
     currentOdometerKm: reader.readLong(offsets[1]),
     id: id,
     isActive: reader.readBoolOrNull(offsets[2]) ?? false,
-    make: reader.readString(offsets[3]),
-    model: reader.readString(offsets[4]),
-    name: reader.readString(offsets[5]),
-    vin: reader.readStringOrNull(offsets[6]),
-    year: reader.readLong(offsets[7]),
+    isSetupDismissed: reader.readBoolOrNull(offsets[3]) ?? false,
+    make: reader.readString(offsets[4]),
+    model: reader.readString(offsets[5]),
+    name: reader.readString(offsets[6]),
+    vin: reader.readStringOrNull(offsets[7]),
+    year: reader.readLong(offsets[8]),
   );
   return object;
 }
@@ -140,14 +147,16 @@ P _vehicleDeserializeProp<P>(
     case 2:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 3:
-      return (reader.readString(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 4:
       return (reader.readString(offset)) as P;
     case 5:
       return (reader.readString(offset)) as P;
     case 6:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 7:
+      return (reader.readStringOrNull(offset)) as P;
+    case 8:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -409,6 +418,16 @@ extension VehicleQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'isActive',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Vehicle, Vehicle, QAfterFilterCondition> isSetupDismissedEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isSetupDismissed',
         value: value,
       ));
     });
@@ -1046,6 +1065,18 @@ extension VehicleQuerySortBy on QueryBuilder<Vehicle, Vehicle, QSortBy> {
     });
   }
 
+  QueryBuilder<Vehicle, Vehicle, QAfterSortBy> sortByIsSetupDismissed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isSetupDismissed', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Vehicle, Vehicle, QAfterSortBy> sortByIsSetupDismissedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isSetupDismissed', Sort.desc);
+    });
+  }
+
   QueryBuilder<Vehicle, Vehicle, QAfterSortBy> sortByMake() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'make', Sort.asc);
@@ -1157,6 +1188,18 @@ extension VehicleQuerySortThenBy
     });
   }
 
+  QueryBuilder<Vehicle, Vehicle, QAfterSortBy> thenByIsSetupDismissed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isSetupDismissed', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Vehicle, Vehicle, QAfterSortBy> thenByIsSetupDismissedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isSetupDismissed', Sort.desc);
+    });
+  }
+
   QueryBuilder<Vehicle, Vehicle, QAfterSortBy> thenByMake() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'make', Sort.asc);
@@ -1238,6 +1281,12 @@ extension VehicleQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Vehicle, Vehicle, QDistinct> distinctByIsSetupDismissed() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isSetupDismissed');
+    });
+  }
+
   QueryBuilder<Vehicle, Vehicle, QDistinct> distinctByMake(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1296,6 +1345,12 @@ extension VehicleQueryProperty
   QueryBuilder<Vehicle, bool, QQueryOperations> isActiveProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isActive');
+    });
+  }
+
+  QueryBuilder<Vehicle, bool, QQueryOperations> isSetupDismissedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isSetupDismissed');
     });
   }
 

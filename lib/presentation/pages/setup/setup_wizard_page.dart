@@ -7,6 +7,7 @@ import '../../../domain/repositories/service_task_repository.dart' show TaskUpda
 import '../../providers/service_task_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/vehicle_provider.dart';
+import '../home/home_root_page.dart';
 
 /// ============================================================
 /// Setup Wizard Page — First-Run Onboarding
@@ -21,7 +22,11 @@ import '../../providers/vehicle_provider.dart';
 /// On Finish, all data is saved in sequence and the page closes.
 /// ============================================================
 class SetupWizardPage extends ConsumerStatefulWidget {
-  const SetupWizardPage({super.key});
+  /// When true, this is the first run — skip navigates to dashboard.
+  /// When false (re-opened from settings), skip just pops back.
+  final bool isFirstRun;
+
+  const SetupWizardPage({super.key, this.isFirstRun = false});
 
   @override
   ConsumerState<SetupWizardPage> createState() => _SetupWizardPageState();
@@ -147,7 +152,17 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         title: Text(t('setup_wizard')),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              if (widget.isFirstRun) {
+                // First run: skip wizard → go to dashboard.
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const HomeRootPage()),
+                  (route) => false,
+                );
+              } else {
+                Navigator.of(context).pop();
+              }
+            },
             child: Text(
               t('skip_for_now'),
               style: TextStyle(

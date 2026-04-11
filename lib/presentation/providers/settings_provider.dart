@@ -189,6 +189,23 @@ const _translations = {
   'services_performed': {'en': 'Services Performed', 'ar': 'الخدمات المنجزة'},
   'labor_cost': {'en': 'Labor', 'ar': 'العمالة'},
   'predicted_cost': {'en': 'Est: ', 'ar': 'متوقع: '},
+
+  // Welcome Page
+  'welcome_subtitle': {
+    'en': 'Track your vehicle maintenance.\nStart by adding your car details.',
+    'ar': 'تابع صيانة سيارتك.\nأبدأ بإدخال بيانات السيارة.'
+  },
+  'make_hint': {'en': 'e.g. Tank', 'ar': 'مثال: تانك'},
+  'model_hint': {'en': 'e.g. 300', 'ar': 'مثال: 300'},
+  'year_hint': {'en': 'e.g. 2024', 'ar': 'مثال: 2024'},
+  'welcome_continue': {'en': 'Continue', 'ar': 'متابعة'},
+
+  // Dashboard Setup Banner
+  'setup_banner_title': {
+    'en': 'Complete your car maintenance history',
+    'ar': 'أكمل إعداد سجل صيانة سيارتك'
+  },
+  'setup_banner_action': {'en': 'Start Wizard', 'ar': 'بدء المعالج'},
 };
 
 /// Immutable settings state.

@@ -15,6 +15,7 @@ class Vehicle {
   late int currentOdometerKm;
   late DateTime addedAt;
   bool isActive;
+  bool isSetupDismissed;
 
   Vehicle({
     this.id = Isar.autoIncrement,
@@ -26,6 +27,7 @@ class Vehicle {
     required this.currentOdometerKm,
     required this.addedAt,
     this.isActive = false,
+    this.isSetupDismissed = false,
   });
 
   factory Vehicle.defaultTank300() {

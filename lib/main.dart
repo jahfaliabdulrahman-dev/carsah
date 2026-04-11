@@ -5,11 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'data/datasources/local/isar_provider.dart';
+import 'data/models/vehicle.dart';
 import 'presentation/pages/home/home_root_page.dart';
+import 'presentation/pages/setup/welcome_page.dart';
 import 'presentation/providers/settings_provider.dart';
 
 /// ============================================================
-/// Application Entry Point — MaintLogic MVP
+/// Application Entry Point — CarSah
 /// ============================================================
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,47 +28,84 @@ void main() async {
       overrides: [
         isarProvider.overrideWithValue(isar),
       ],
-      child: const MaintLogicApp(),
+      child: const CarSahApp(),
     ),
   );
 }
 
-/// Root MaterialApp with bilingual support (EN/AR).
-class MaintLogicApp extends ConsumerWidget {
-  const MaintLogicApp({super.key});
+const _brandBlue = Color(0xFF006064);
+
+/// Root MaterialApp — routes to Welcome or Home based on vehicle count.
+class CarSahApp extends ConsumerStatefulWidget {
+  const CarSahApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CarSahApp> createState() => _CarSahAppState();
+}
+
+class _CarSahAppState extends ConsumerState<CarSahApp> {
+  Widget? _home;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFirstRun();
+  }
+
+  Future<void> _checkFirstRun() async {
+    final isar = ref.read(isarProvider);
+    final count = await isar.vehicles.count();
+    if (mounted) {
+      setState(() {
+        _home = count == 0 ? const WelcomePage() : const HomeRootPage();
+        _initialized = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
 
+    // Loading spinner while checking first-run state.
+    if (!_initialized) {
+      return MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        ),
+      );
+    }
+
     return MaterialApp(
-      title: 'MaintLogic',
+      title: 'CarSah',
       debugShowCheckedModeBanner: false,
       theme: _lightTheme(),
       darkTheme: _darkTheme(),
       themeMode: settings.themeMode,
 
       // Pinned to English to prevent RTL visual corruption.
-      // Device system locale is Arabic — without this pin, English
-      // text renders right-aligned with broken padding.
       locale: const Locale('en', ''),
       supportedLocales: const [
         Locale('en', ''),
         Locale('ar', ''),
       ],
 
-      // Localization delegates — required so Arabic RTL does not crash.
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
 
-      home: const HomeRootPage(),
+      home: _home!,
     );
   }
 
-  static const _brandBlue = Color(0xFF006064);
+  // — Themes ——
 
   static ThemeData _lightTheme() {
     return ThemeData(

@@ -78,6 +78,26 @@ class VehicleNotifier extends AsyncNotifier<VehicleState> {
     }
   }
 
+  /// Creates a new vehicle and sets it as active.
+  Future<void> createVehicle(Vehicle vehicle) async {
+    await _repo.createVehicle(vehicle, setAsActive: true);
+    ref.invalidateSelf();
+  }
+
+  /// Marks the setup wizard as dismissed permanently.
+  Future<void> dismissSetup() async {
+    final current = await future;
+    final vehicle = current.activeVehicle;
+    if (vehicle == null) return;
+
+    vehicle.isSetupDismissed = true;
+    final isar = ref.watch(isarProvider);
+    await isar.writeTxn(() async {
+      await isar.vehicles.put(vehicle);
+    });
+    ref.invalidateSelf();
+  }
+
   /// Updates the make, model, display name, and year of a vehicle.
   Future<void> updateVehicle({
     required int vehicleId,

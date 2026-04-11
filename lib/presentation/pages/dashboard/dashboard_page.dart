@@ -150,6 +150,84 @@ class DashboardPage extends ConsumerWidget {
               ),
             ),
 
+            // — Setup Banner (dismissible) —
+            SliverToBoxAdapter(
+              child: vehicleAsync.when(
+                data: (vState) {
+                  final vehicle = vState.activeVehicle;
+                  if (vehicle == null || vehicle.isSetupDismissed) {
+                    return const SizedBox.shrink();
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    child: Card(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Row(
+                          children: [
+                            Icon(Icons.auto_fix_high,
+                                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                size: 22),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    t('setup_banner_title'),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  SizedBox(
+                                    height: 32,
+                                    child: FilledButton(
+                                      onPressed: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) => const SetupWizardPage(),
+                                          ),
+                                        );
+                                      },
+                                      style: FilledButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                                        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                      ),
+                                      child: Text(t('setup_banner_action')),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: () {
+                                ref.read(vehicleProvider.notifier).dismissSetup();
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(4),
+                                child: Icon(
+                                  Icons.close,
+                                  size: 20,
+                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
+            ),
+
             // — Vehicle Card —
             SliverToBoxAdapter(
               child: Padding(

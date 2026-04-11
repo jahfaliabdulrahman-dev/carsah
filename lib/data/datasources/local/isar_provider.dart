@@ -91,8 +91,8 @@ Future<Isar> initIsarDatabase() async {
     );
   }
 
-  // Seed default data if this is a fresh installation.
-  await _seedDefaultVehicle(isar);
+  // Auto-seed DISABLED — WelcomePage handles first-run vehicle creation.
+  // await _seedDefaultVehicle(isar);
 
   return isar;
 }

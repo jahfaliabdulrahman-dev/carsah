@@ -277,6 +277,10 @@ class SettingsNotifier extends Notifier<SettingsState> {
           : ThemeMode.dark,
     );
   }
+
+  void setThemeMode(ThemeMode mode) {
+    state = state.copyWith(themeMode: mode);
+  }
 }
 
 /// Riverpod provider for settings.

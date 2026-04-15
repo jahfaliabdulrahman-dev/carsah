@@ -65,13 +65,107 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
     await ref.read(vehicleProvider.notifier).createVehicle(vehicle);
 
     if (mounted) {
-      // Navigate to Setup Wizard (optional — can skip).
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => const SetupWizardPage(isFirstRun: true),
         ),
       );
     }
+  }
+
+  void _showSettingsSheet() {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return Consumer(
+          builder: (ctx, ref, _) {
+            final s = ref.watch(settingsProvider);
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Language
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.translate, color: colorScheme.primary),
+                    title: Text(s.t('menu_language')),
+                    trailing: SegmentedButton<AppLocale>(
+                      segments: const [
+                        ButtonSegment(
+                          value: AppLocale.ar,
+                          label: Text('العربية'),
+                        ),
+                        ButtonSegment(
+                          value: AppLocale.en,
+                          label: Text('English'),
+                        ),
+                      ],
+                      selected: {s.locale},
+                      onSelectionChanged: (selected) {
+                        ref.read(settingsProvider.notifier).setLocale(selected.first);
+                      },
+                      showSelectedIcon: false,
+                      style: const ButtonStyle(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                  ),
+                  const Divider(),
+
+                  // Theme
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      s.themeMode == ThemeMode.light
+                          ? Icons.light_mode_outlined
+                          : Icons.dark_mode_outlined,
+                      color: colorScheme.primary,
+                    ),
+                    title: Text(s.t('menu_theme')),
+                    trailing: SegmentedButton<ThemeMode>(
+                      segments: const [
+                        ButtonSegment(
+                          value: ThemeMode.light,
+                          label: Text('☀'),
+                        ),
+                        ButtonSegment(
+                          value: ThemeMode.dark,
+                          label: Text('🌙'),
+                        ),
+                      ],
+                      selected: {s.themeMode},
+                      onSelectionChanged: (selected) {
+                        ref.read(settingsProvider.notifier).setThemeMode(selected.first);
+                      },
+                      showSelectedIcon: false,
+                      style: const ButtonStyle(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -81,144 +175,158 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
 
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // — Brand Icon —
-                  Icon(
-                    Icons.directions_car_rounded,
-                    size: 64,
-                    color: colorScheme.primary,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    t('app_title'),
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    t('welcome_subtitle'),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: colorScheme.onSurfaceVariant,
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.directions_car_rounded,
+                      size: 64,
+                      color: colorScheme.primary,
                     ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // — Make Field —
-                  TextFormField(
-                    controller: _makeController,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(
-                      labelText: t('make'),
-                      hintText: t('make_hint'),
-                      border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.car_rental_outlined),
+                    const SizedBox(height: 16),
+                    Text(
+                      t('app_title'),
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
+                          ),
                     ),
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? t('make') : null,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // — Model Field —
-                  TextFormField(
-                    controller: _modelController,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(
-                      labelText: t('model'),
-                      hintText: t('model_hint'),
-                      border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.model_training_outlined),
+                    const SizedBox(height: 8),
+                    Text(
+                      t('welcome_subtitle'),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? t('model') : null,
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 32),
 
-                  // — Year Field (digits only) —
-                  TextFormField(
-                    controller: _yearController,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(4),
-                    ],
-                    decoration: InputDecoration(
-                      labelText: t('year'),
-                      hintText: t('year_hint'),
-                      border: const OutlineInputBorder(),
-                      prefixIcon:
-                          const Icon(Icons.calendar_today_outlined, size: 20),
+                    // Make
+                    TextFormField(
+                      controller: _makeController,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: InputDecoration(
+                        labelText: t('make'),
+                        hintText: t('make_hint'),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.car_rental_outlined),
+                      ),
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? t('make') : null,
                     ),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) return t('year');
-                      final parsed = int.tryParse(v.trim());
-                      if (parsed == null || parsed < 1900 || parsed > 2100) {
-                        return 'Invalid year';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // — Odometer Field (digits only) —
-                  TextFormField(
-                    controller: _odometerController,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: InputDecoration(
-                      labelText: t('odometer'),
-                      hintText: t('odometer_hint'),
-                      border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.speed_outlined, size: 20),
-                      suffixText: t('km'),
+                    // Model
+                    TextFormField(
+                      controller: _modelController,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: InputDecoration(
+                        labelText: t('model'),
+                        hintText: t('model_hint'),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.model_training_outlined),
+                      ),
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? t('model') : null,
                     ),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) return t('odometer');
-                      if (int.tryParse(v.trim()) == null) return 'Invalid number';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 32),
+                    const SizedBox(height: 16),
 
-                  // — Save & Continue —
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: FilledButton.icon(
-                      onPressed: _isSaving ? null : _onSave,
-                      icon: _isSaving
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(Icons.arrow_forward),
-                      label: Text(
-                        t('welcome_continue'),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                    // Year
+                    TextFormField(
+                      controller: _yearController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(4),
+                      ],
+                      decoration: InputDecoration(
+                        labelText: t('year'),
+                        hintText: t('year_hint'),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.calendar_today_outlined, size: 20),
+                      ),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return t('year');
+                        final parsed = int.tryParse(v.trim());
+                        if (parsed == null || parsed < 1900 || parsed > 2100) {
+                          return 'Invalid year';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Odometer
+                    TextFormField(
+                      controller: _odometerController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: InputDecoration(
+                        labelText: t('odometer'),
+                        hintText: t('odometer_hint'),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.speed_outlined, size: 20),
+                        suffixText: t('km'),
+                      ),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return t('odometer');
+                        if (int.tryParse(v.trim()) == null) return 'Invalid number';
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Continue
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: FilledButton.icon(
+                        onPressed: _isSaving ? null : _onSave,
+                        icon: _isSaving
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.arrow_forward),
+                        label: Text(
+                          t('welcome_continue'),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
+
+            // Settings button (top-right)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                onPressed: _showSettingsSheet,
+                icon: Icon(
+                  Icons.settings_outlined,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                tooltip: t('menu_language'),
+              ),
+            ),
+          ],
         ),
       ),
     );

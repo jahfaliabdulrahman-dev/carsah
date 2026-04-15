@@ -222,8 +222,16 @@ const _translations = {
   'next_step': {'en': 'Next', 'ar': 'التالي'},
   'back': {'en': 'Back', 'ar': 'رجوع'},
   'no_tasks_selected': {
-    'en': 'No tasks selected. Go back and enable at least one.',
-    'ar': 'لم يتم اختيار مهام. عد وفعّل مهمة واحدة على الأقل.'
+    'en': 'No tasks selected. Go back and choose at least one.',
+    'ar': 'لم يتم اختيار أي مهام. عد واختر مهمة واحدة على الأقل.'
+  },
+  'step1_context': {
+    'en': 'These are the recommended periodic tasks for your vehicle. Select the tasks you want to track so we can schedule your upcoming alerts accurately.',
+    'ar': 'هذه هي المهام الدورية المقترحة لسيارتك. اختر المهام التي تريد متابعتها حتى نتمكن من جدولة تنبيهاتك القادمة بدقة.'
+  },
+  'step2_context': {
+    'en': 'Enter the last service data for your selected tasks (odometer and cost) to set an accurate starting point.',
+    'ar': 'سجل بيانات آخر صيانة قمت بها للمهام المختارة (الممشى والتكلفة) لضبط نقطة البداية بدقة.'
   },
 };
 

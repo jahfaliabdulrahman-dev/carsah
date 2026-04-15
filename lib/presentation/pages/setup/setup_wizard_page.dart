@@ -85,14 +85,13 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   }
 
   /// Pre-populate Step 1 from existing seeded tasks.
+  /// All tasks start UNCHECKED — user selects which ones to track.
   void _initStep1(List<ServiceTask> tasks) {
     if (_step1Initialized) return;
     _step1Initialized = true;
 
     for (final task in tasks) {
-      // Enable all tasks by default.
-      _enabledTaskKeys.add(task.taskKey);
-
+      // Do NOT enable by default — user must select.
       _kmControllers[task.taskKey] = TextEditingController(
         text: task.intervalKm?.toString() ?? '',
       );
@@ -355,113 +354,160 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       return Center(child: Text(t('no_tasks_loaded')));
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: tasks.length,
-      itemBuilder: (context, index) {
-        final task = tasks[index];
-        final enabled = _enabledTaskKeys.contains(task.taskKey);
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 8),
+    return CustomScrollView(
+      slivers: [
+        // Collapsing context header
+        SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Checkbox + name
-                Row(
-                  children: [
-                    SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: Checkbox(
-                        value: enabled,
-                        onChanged: (checked) {
-                          setState(() {
-                            if (checked == true) {
-                              _enabledTaskKeys.add(task.taskKey);
-                            } else {
-                              _enabledTaskKeys.remove(task.taskKey);
-                            }
-                          });
-                        },
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        t(task.displayNameEn),
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: enabled
-                              ? null
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Interval fields (only when enabled)
-                if (enabled) ...[
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      if (task.intervalKm != null) ...[
-                        Expanded(
-                          child: TextFormField(
-                            controller: _kmControllers[task.taskKey],
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
-                            ],
-                            decoration: InputDecoration(
-                              labelText: t('interval_km'),
-                              border: const OutlineInputBorder(),
-                              isDense: true,
-                              suffixText: t('km'),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 8,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                      if (task.intervalKm != null && task.intervalMonths != null)
-                        const SizedBox(width: 8),
-                      if (task.intervalMonths != null) ...[
-                        Expanded(
-                          child: TextFormField(
-                            controller: _monthControllers[task.taskKey],
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
-                            ],
-                            decoration: InputDecoration(
-                              labelText: t('interval_months'),
-                              border: const OutlineInputBorder(),
-                              isDense: true,
-                              suffixText: t('months'),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 8,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ],
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: Text(
+              t('step1_context'),
+              style: TextStyle(
+                fontSize: 13,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                height: 1.5,
+              ),
             ),
           ),
-        );
-      },
+        ),
+
+        // Task list
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final task = tasks[index];
+                final enabled = _enabledTaskKeys.contains(task.taskKey);
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {
+                      setState(() {
+                        if (enabled) {
+                          _enabledTaskKeys.remove(task.taskKey);
+                        } else {
+                          _enabledTaskKeys.add(task.taskKey);
+                        }
+                      });
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Checkbox + name
+                          Row(
+                            children: [
+                              SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: Checkbox(
+                                  value: enabled,
+                                  onChanged: (checked) {
+                                    setState(() {
+                                      if (checked == true) {
+                                        _enabledTaskKeys.add(task.taskKey);
+                                      } else {
+                                        _enabledTaskKeys.remove(task.taskKey);
+                                      }
+                                    });
+                                  },
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  t(task.displayNameEn),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: enabled
+                                        ? null
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          // Interval fields (only when enabled)
+                          if (enabled) ...[
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                if (task.intervalKm != null) ...[
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller:
+                                          _kmControllers[task.taskKey],
+                                      keyboardType: TextInputType.number,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly
+                                      ],
+                                      decoration: InputDecoration(
+                                        labelText: t('interval_km'),
+                                        border: const OutlineInputBorder(),
+                                        isDense: true,
+                                        suffixText: t('km'),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 8,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                if (task.intervalKm != null &&
+                                    task.intervalMonths != null)
+                                  const SizedBox(width: 8),
+                                if (task.intervalMonths != null) ...[
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller:
+                                          _monthControllers[task.taskKey],
+                                      keyboardType: TextInputType.number,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly
+                                      ],
+                                      decoration: InputDecoration(
+                                        labelText: t('interval_months'),
+                                        border: const OutlineInputBorder(),
+                                        isDense: true,
+                                        suffixText: t('months'),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 8,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+              childCount: tasks.length,
+            ),
+          ),
+        ),
+
+        // Bottom padding for nav bar
+        const SliverPadding(padding: EdgeInsets.only(bottom: 80)),
+      ],
     );
   }
 
@@ -477,105 +523,137 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       return Center(child: Text(t('no_tasks_selected')));
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: enabledTasks.length,
-      itemBuilder: (context, index) {
-        final task = enabledTasks[index];
-        final history =
-            _historyEntries.putIfAbsent(task.taskKey, () => _TaskHistoryEntry());
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 10),
+    return CustomScrollView(
+      slivers: [
+        // Collapsing context header
+        SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Task name header
-                Row(
-                  children: [
-                    Icon(Icons.check_circle_outline,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.primary),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        t(task.displayNameEn),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-
-                // Odometer
-                TextFormField(
-                  controller: history.odometer,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    labelText: t('odometer'),
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                    prefixIcon: const Icon(Icons.speed_outlined, size: 18),
-                    suffixText: t('km'),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 10,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                // Costs row
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: history.partsCost,
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
-                        decoration: InputDecoration(
-                          labelText: t('part_cost'),
-                          border: const OutlineInputBorder(),
-                          isDense: true,
-                          prefixText: 'SAR ',
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 10,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextFormField(
-                        controller: history.laborCost,
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
-                        decoration: InputDecoration(
-                          labelText: t('labor_cost'),
-                          border: const OutlineInputBorder(),
-                          isDense: true,
-                          prefixText: 'SAR ',
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 10,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: Text(
+              t('step2_context'),
+              style: TextStyle(
+                fontSize: 13,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                height: 1.5,
+              ),
             ),
           ),
-        );
-      },
+        ),
+
+        // Enabled tasks history list
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final task = enabledTasks[index];
+                final history = _historyEntries.putIfAbsent(
+                    task.taskKey, () => _TaskHistoryEntry());
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Task name header
+                        Row(
+                          children: [
+                            Icon(Icons.check_circle_outline,
+                                size: 18,
+                                color: Theme.of(context).colorScheme.primary),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                t(task.displayNameEn),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Odometer
+                        TextFormField(
+                          controller: history.odometer,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                          decoration: InputDecoration(
+                            labelText: t('odometer'),
+                            border: const OutlineInputBorder(),
+                            isDense: true,
+                            prefixIcon:
+                                const Icon(Icons.speed_outlined, size: 18),
+                            suffixText: t('km'),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 10,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Costs row
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: history.partsCost,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                        decimal: true),
+                                decoration: InputDecoration(
+                                  labelText: t('part_cost'),
+                                  border: const OutlineInputBorder(),
+                                  isDense: true,
+                                  prefixText: 'SAR ',
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 10,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: TextFormField(
+                                controller: history.laborCost,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                        decimal: true),
+                                decoration: InputDecoration(
+                                  labelText: t('labor_cost'),
+                                  border: const OutlineInputBorder(),
+                                  isDense: true,
+                                  prefixText: 'SAR ',
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 10,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+              childCount: enabledTasks.length,
+            ),
+          ),
+        ),
+
+        // Bottom padding for nav bar
+        const SliverPadding(padding: EdgeInsets.only(bottom: 80)),
+      ],
     );
   }
 }

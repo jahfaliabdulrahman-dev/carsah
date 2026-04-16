@@ -22,10 +22,10 @@ const MaintenanceRecordSchema = CollectionSchema(
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'invoiceImagePath': PropertySchema(
+    r'invoiceImageId': PropertySchema(
       id: 1,
-      name: r'invoiceImagePath',
-      type: IsarType.string,
+      name: r'invoiceImageId',
+      type: IsarType.long,
     ),
     r'isSynced': PropertySchema(
       id: 2,
@@ -123,12 +123,6 @@ int _maintenanceRecordEstimateSize(
 ) {
   var bytesCount = offsets.last;
   {
-    final value = object.invoiceImagePath;
-    if (value != null) {
-      bytesCount += 3 + value.length * 3;
-    }
-  }
-  {
     final value = object.notes;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -175,7 +169,7 @@ void _maintenanceRecordSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDateTime(offsets[0], object.createdAt);
-  writer.writeString(offsets[1], object.invoiceImagePath);
+  writer.writeLong(offsets[1], object.invoiceImageId);
   writer.writeBool(offsets[2], object.isSynced);
   writer.writeDouble(offsets[3], object.laborCostSar);
   writer.writeString(offsets[4], object.notes);
@@ -199,7 +193,7 @@ MaintenanceRecord _maintenanceRecordDeserialize(
   final object = MaintenanceRecord(
     createdAt: reader.readDateTime(offsets[0]),
     id: id,
-    invoiceImagePath: reader.readStringOrNull(offsets[1]),
+    invoiceImageId: reader.readLongOrNull(offsets[1]),
     isSynced: reader.readBoolOrNull(offsets[2]) ?? false,
     laborCostSar: reader.readDoubleOrNull(offsets[3]) ?? 0.0,
     notes: reader.readStringOrNull(offsets[4]),
@@ -226,7 +220,7 @@ P _maintenanceRecordDeserializeProp<P>(
     case 0:
       return (reader.readDateTime(offset)) as P;
     case 1:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 2:
       return (reader.readBoolOrNull(offset) ?? false) as P;
     case 3:
@@ -567,155 +561,75 @@ extension MaintenanceRecordQueryFilter
   }
 
   QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
-      invoiceImagePathIsNull() {
+      invoiceImageIdIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'invoiceImagePath',
+        property: r'invoiceImageId',
       ));
     });
   }
 
   QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
-      invoiceImagePathIsNotNull() {
+      invoiceImageIdIsNotNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'invoiceImagePath',
+        property: r'invoiceImageId',
       ));
     });
   }
 
   QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
-      invoiceImagePathEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
+      invoiceImageIdEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'invoiceImagePath',
+        property: r'invoiceImageId',
         value: value,
-        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
-      invoiceImagePathGreaterThan(
-    String? value, {
+      invoiceImageIdGreaterThan(
+    int? value, {
     bool include = false,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'invoiceImagePath',
+        property: r'invoiceImageId',
         value: value,
-        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
-      invoiceImagePathLessThan(
-    String? value, {
+      invoiceImageIdLessThan(
+    int? value, {
     bool include = false,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'invoiceImagePath',
+        property: r'invoiceImageId',
         value: value,
-        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
-      invoiceImagePathBetween(
-    String? lower,
-    String? upper, {
+      invoiceImageIdBetween(
+    int? lower,
+    int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'invoiceImagePath',
+        property: r'invoiceImageId',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
-      invoiceImagePathStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'invoiceImagePath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
-      invoiceImagePathEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'invoiceImagePath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
-      invoiceImagePathContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'invoiceImagePath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
-      invoiceImagePathMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'invoiceImagePath',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
-      invoiceImagePathIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'invoiceImagePath',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterFilterCondition>
-      invoiceImagePathIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'invoiceImagePath',
-        value: '',
       ));
     });
   }
@@ -2050,16 +1964,16 @@ extension MaintenanceRecordQuerySortBy
   }
 
   QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterSortBy>
-      sortByInvoiceImagePath() {
+      sortByInvoiceImageId() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'invoiceImagePath', Sort.asc);
+      return query.addSortBy(r'invoiceImageId', Sort.asc);
     });
   }
 
   QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterSortBy>
-      sortByInvoiceImagePathDesc() {
+      sortByInvoiceImageIdDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'invoiceImagePath', Sort.desc);
+      return query.addSortBy(r'invoiceImageId', Sort.desc);
     });
   }
 
@@ -2234,16 +2148,16 @@ extension MaintenanceRecordQuerySortThenBy
   }
 
   QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterSortBy>
-      thenByInvoiceImagePath() {
+      thenByInvoiceImageId() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'invoiceImagePath', Sort.asc);
+      return query.addSortBy(r'invoiceImageId', Sort.asc);
     });
   }
 
   QueryBuilder<MaintenanceRecord, MaintenanceRecord, QAfterSortBy>
-      thenByInvoiceImagePathDesc() {
+      thenByInvoiceImageIdDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'invoiceImagePath', Sort.desc);
+      return query.addSortBy(r'invoiceImageId', Sort.desc);
     });
   }
 
@@ -2398,10 +2312,9 @@ extension MaintenanceRecordQueryWhereDistinct
   }
 
   QueryBuilder<MaintenanceRecord, MaintenanceRecord, QDistinct>
-      distinctByInvoiceImagePath({bool caseSensitive = true}) {
+      distinctByInvoiceImageId() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'invoiceImagePath',
-          caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'invoiceImageId');
     });
   }
 
@@ -2505,10 +2418,10 @@ extension MaintenanceRecordQueryProperty
     });
   }
 
-  QueryBuilder<MaintenanceRecord, String?, QQueryOperations>
-      invoiceImagePathProperty() {
+  QueryBuilder<MaintenanceRecord, int?, QQueryOperations>
+      invoiceImageIdProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'invoiceImagePath');
+      return query.addPropertyName(r'invoiceImageId');
     });
   }
 

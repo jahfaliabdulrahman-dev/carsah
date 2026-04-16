@@ -19,7 +19,10 @@ class MaintenanceRecord {
   List<String>? partsReplaced;
   List<String>? taskKeys;
   String? providerName;
-  String? invoiceImagePath;
+
+  /// Links to InvoiceImage entity via ID (normalized reference).
+  /// Null means no invoice attached.
+  int? invoiceImageId;
 
   late DateTime serviceDate;
   late DateTime createdAt;
@@ -38,7 +41,7 @@ class MaintenanceRecord {
     this.partsReplaced,
     this.taskKeys,
     this.providerName,
-    this.invoiceImagePath,
+    this.invoiceImageId,
     required this.serviceDate,
     required this.createdAt,
     this.isSynced = false,

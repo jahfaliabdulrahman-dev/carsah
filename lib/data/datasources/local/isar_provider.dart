@@ -6,6 +6,7 @@ import '../../models/vehicle.dart';
 import '../../models/maintenance_record.dart';
 import '../../models/service_task.dart';
 import '../../models/part_price.dart';
+import '../../models/invoice_image.dart';
 
 /// ============================================================
 /// Isar Database Provider — Phase 1
@@ -85,6 +86,7 @@ Future<Isar> initIsarDatabase() async {
         MaintenanceRecordSchema,
         ServiceTaskSchema,
         PartPriceSchema,
+        InvoiceImageSchema,
       ],
       directory: directory.path,
       name: kDatabaseName,

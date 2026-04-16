@@ -5,7 +5,7 @@ import '../../domain/repositories/maintenance_repository.dart';
 import '../models/maintenance_record.dart';
 import '../models/part_price.dart';
 import '../models/service_task.dart';
-import '../services/local_invoice_storage_service.dart';
+import '../services/ref_counted_invoice_service.dart';
 
 /// ============================================================
 /// Maintenance Repository — Isar Implementation
@@ -248,14 +248,13 @@ class MaintenanceRepositoryImpl implements MaintenanceRepository {
       final existing = await isar.maintenanceRecords.get(recordId);
       if (existing == null) return false;
 
-      // CASCADE DELETE: Remove invoice file before Isar record
-      if (existing.invoiceImagePath != null) {
+      // CASCADE DELETE: Decrement refCount or delete if last reference
+      if (existing.invoiceImageId != null) {
         try {
-          final invoiceService = LocalInvoiceStorageService();
-          await invoiceService.deleteInvoice(existing.invoiceImagePath!);
-          debugPrint('[CASCADE DELETE] Invoice deleted: ${existing.invoiceImagePath}');
+          final invoiceService = RefCountedInvoiceService(isar);
+          await invoiceService.detachOrDelete(existing.invoiceImageId!);
         } catch (e) {
-          debugPrint('[CASCADE DELETE] Invoice deletion failed (non-blocking): $e');
+          debugPrint('[CASCADE DELETE] Invoice detach failed (non-blocking): $e');
         }
       }
 

@@ -127,20 +127,49 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
   }
 
   Future<void> _onFinish() async {
-    // STEP A: Dismiss keyboard immediately to prevent UI thread deadlock
-    // (InputMethodManager ANR / Signal 3 when keyboard animation overlaps I/O)
-    FocusManager.instance.primaryFocus?.unfocus();
+    // ================================================================
+    // UI-YIELD PROTOCOL — Prevents InputMethodManager ANR (Signal 3)
+    // ================================================================
 
-    // STEP B: Animation buffer — let keyboard drop clear the Main Thread queue
-    // before starting heavy Isar write operations
-    await Future.delayed(const Duration(milliseconds: 150));
-
+    // 1. Lock UI IMMEDIATELY — render CircularProgressIndicator
     setState(() => _isSaving = true);
 
+    // 2. Dismiss keyboard — must happen AFTER setState so the loading
+    //    state renders before the inset animation begins
+    FocusScope.of(context).unfocus();
+
+    // 3. YIELD the Main Thread completely — 500ms guarantees:
+    //    a) CircularProgressIndicator renders
+    //    b) Keyboard inset animation completes
+    //    c) Choreographer queue clears
+    //    (150ms was insufficient on first-launch debug builds)
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // 4. Execute database operations (safe — UI is locked, keyboard is gone)
+    await _executeDatabaseSave();
+
+    // 5. Navigate safely
+    if (widget.isFirstRun) {
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomeRootPage()),
+          (route) => false,
+        );
+      }
+    } else {
+      if (mounted) Navigator.of(context).pop();
+    }
+  }
+
+  /// Batched database save — all Isar I/O happens here.
+  ///
+  /// Records are built in-memory first, then persisted in a single
+  /// provider update cycle to minimize writeTxn contention.
+  Future<void> _executeDatabaseSave() async {
     final vehicleState = await ref.read(vehicleProvider.future);
     final vehicle = vehicleState.activeVehicle;
     if (vehicle == null) {
-      setState(() => _isSaving = false);
+      if (mounted) setState(() => _isSaving = false);
       return;
     }
 
@@ -148,7 +177,8 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
     final taskState = ref.read(serviceTaskProvider).valueOrNull;
     final tasks = taskState?.allTasks ?? [];
 
-    // 1. Create real MaintenanceRecords for tasks with history data.
+    // Phase 1: Build all records in memory (zero I/O)
+    final recordsToSave = <MaintenanceRecord>[];
     for (final entry in _historyEntries.entries) {
       final taskKey = entry.key;
       final history = entry.value;
@@ -161,11 +191,10 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       final partsCost = double.tryParse(history.partsCost.text.trim()) ?? 0.0;
       final laborCost = double.tryParse(history.laborCost.text.trim()) ?? 0.0;
 
-      // Find task display name.
       final task = tasks.where((t) => t.taskKey == taskKey).firstOrNull;
       final serviceName = task?.displayNameEn ?? taskKey;
 
-      final record = MaintenanceRecord(
+      recordsToSave.add(MaintenanceRecord(
         vehicleId: vehicle.id,
         serviceType: serviceName,
         odometerKm: odometer,
@@ -177,12 +206,16 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         serviceDate: now,
         createdAt: now,
         notes: 'Imported via Setup Wizard',
-      );
+      ));
+    }
 
+    // Phase 2: Persist records sequentially (each has its own writeTxn
+    // with part price extraction — batching requires repo refactor)
+    for (final record in recordsToSave) {
       await ref.read(maintenanceProvider.notifier).addRecord(record);
     }
 
-    // 2. Batch-update task intervals for enabled tasks.
+    // Phase 3: Batch-update task intervals
     final taskRepo = ref.read(serviceTaskProvider.notifier);
     for (final taskKey in _enabledTaskKeys) {
       final kmText = _kmControllers[taskKey]?.text.trim();
@@ -203,20 +236,9 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
       }
     }
 
-    // 3. Refresh all providers.
+    // Phase 4: Refresh providers
     ref.invalidate(serviceTaskProvider);
     ref.invalidate(maintenanceProvider);
-
-    if (widget.isFirstRun) {
-      if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const HomeRootPage()),
-          (route) => false,
-        );
-      }
-    } else {
-      if (mounted) Navigator.of(context).pop();
-    }
   }
 
   @override

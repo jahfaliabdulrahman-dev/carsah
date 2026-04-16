@@ -30,24 +30,33 @@ mixin InvoiceDialogLifecycle<T extends StatefulWidget> on State<T> {
 
   /// Callback when a new image is picked.
   /// Calls pickAndAttach which handles dedup and ref counting.
+  ///
+  /// CRITICAL: Detaches old transient BEFORE new pick to prevent phantom files.
+  /// If user picks B then C, B is detached immediately — no leak.
   Future<void> pickInvoice() async {
+    // Step 1: IMMEDIATELY detach any non-original transient
+    // This prevents phantom files if user picks multiple times
+    if (transientImageId != null && transientImageId != _originalImageId) {
+      final oldId = transientImageId!;
+      debugPrint('[PHANTOM GUARD] Pre-detaching old transient: $oldId');
+      await _invoiceService.detachOrDelete(oldId);
+      debugPrint('[PHANTOM GUARD] Old transient detached. File leak prevented.');
+      setState(() {
+        transientImageId = null;
+      });
+    }
+
+    // Step 2: Now pick new image
     final newId = await _invoiceService.pickAndAttach(
       source: ImageSource.gallery,
     );
 
     if (newId != null) {
       debugPrint('[DEDUP] pickAndAttach returned ID: $newId');
-
-      // Detach old reference if replacing
-      if (transientImageId != null && transientImageId != _originalImageId) {
-        debugPrint('[REF_COUNT CHANGE] Detaching old transient: $transientImageId');
-        await _invoiceService.detachOrDelete(transientImageId!);
-      }
-
+      debugPrint('[PHANTOM GUARD] New transientImageId set to: $newId');
       setState(() {
         transientImageId = newId;
       });
-      debugPrint('[REF_COUNT CHANGE] transientImageId set to: $newId');
     }
   }
 

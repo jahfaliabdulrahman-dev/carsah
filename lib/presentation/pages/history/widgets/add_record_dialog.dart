@@ -352,29 +352,16 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog>
                         border: const OutlineInputBorder(),
                         isDense: true,
                         prefixIcon: const Icon(Icons.speed_outlined, size: 18),
-                        suffixIcon: ConstrainedBox(
-                          constraints: const BoxConstraints(minWidth: 40),
-                          child: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: Text(
-                                t('km'),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        suffixIconConstraints: const BoxConstraints(
-                          minWidth: 40,
-                          minHeight: 0,
-                        ),
-                        contentPadding: const EdgeInsetsDirectional.fromSTEB(
-                          12, 14, 4, 14,
+                        suffixText: t('km'),
+                        suffixStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 18,
                         ),
                       ),
+                      textDirection: TextDirection.ltr,
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) {
                           return t('odometer');

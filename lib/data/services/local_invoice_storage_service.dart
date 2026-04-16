@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 /// Handles invoice image lifecycle: pick → compress → sandbox save.
@@ -47,7 +48,7 @@ class LocalInvoiceStorageService {
       }
 
       // Step 4: Compress using native hardware acceleration
-      final targetPath = '${invoicesDir.path}/$filename';
+      final targetPath = p.join(invoicesDir.path, filename);
       final compressedFile = await FlutterImageCompress.compressAndGetFile(
         pickedFile.path,
         targetPath,
@@ -76,7 +77,8 @@ class LocalInvoiceStorageService {
   Future<void> deleteInvoice(String relativePath) async {
     try {
       final appDir = await getApplicationDocumentsDirectory();
-      final file = File('${appDir.path}/$relativePath');
+      final absolutePath = p.join(appDir.path, relativePath);
+      final file = File(absolutePath);
       if (await file.exists()) {
         await file.delete();
       }
@@ -104,7 +106,8 @@ class LocalInvoiceStorageService {
     if (relativePath == null) return null;
     try {
       final appDir = await getApplicationDocumentsDirectory();
-      final file = File('${appDir.path}/$relativePath');
+      final absolutePath = p.join(appDir.path, relativePath);
+      final file = File(absolutePath);
       return await file.exists() ? file : null;
     } catch (_) {
       return null;

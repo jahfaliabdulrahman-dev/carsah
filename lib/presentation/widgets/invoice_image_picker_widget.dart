@@ -35,6 +35,8 @@ class _InvoiceImagePickerWidgetState extends State<InvoiceImagePickerWidget> {
 
     final relativePath = await _storage.captureAndSaveInvoice(source: source);
 
+    debugPrint('[INVOICE TRACE] Picker — captureAndSaveInvoice returned: $relativePath');
+
     if (mounted) {
       setState(() => _isLoading = false);
 
@@ -43,7 +45,10 @@ class _InvoiceImagePickerWidgetState extends State<InvoiceImagePickerWidget> {
         if (widget.currentImagePath != null) {
           await _storage.deleteInvoice(widget.currentImagePath!);
         }
+        debugPrint('[INVOICE TRACE] Picker — calling onImageChanged with: $relativePath');
         widget.onImageChanged(relativePath);
+      } else {
+        debugPrint('[INVOICE TRACE] Picker — user cancelled or capture failed');
       }
     }
   }

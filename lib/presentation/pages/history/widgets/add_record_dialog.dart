@@ -197,6 +197,9 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog>
 
     final finalInvoicePath = finalizeInvoicePath();
 
+    debugPrint('[INVOICE TRACE] AddDialog — transientImagePath: $transientImagePath');
+    debugPrint('[INVOICE TRACE] AddDialog — finalPath from finalizeInvoicePath: $finalInvoicePath');
+
     int savedCount = 0;
     int failedCount = 0;
 
@@ -219,6 +222,8 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog>
         serviceDate: _selectedDate,
         createdAt: _selectedDate,
       );
+
+      debugPrint('[INVOICE TRACE] AddDialog — record[$taskKey].invoiceImagePath: ${record.invoiceImagePath}');
 
       try {
         final success = await ref
@@ -347,19 +352,27 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog>
                         border: const OutlineInputBorder(),
                         isDense: true,
                         prefixIcon: const Icon(Icons.speed_outlined, size: 18),
-                        suffix: Padding(
-                          padding: const EdgeInsets.only(left: 4),
-                          child: Text(
-                            t('km'),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        suffixIcon: ConstrainedBox(
+                          constraints: const BoxConstraints(minWidth: 40),
+                          child: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: Text(
+                                t('km'),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 14,
+                        suffixIconConstraints: const BoxConstraints(
+                          minWidth: 40,
+                          minHeight: 0,
+                        ),
+                        contentPadding: const EdgeInsetsDirectional.fromSTEB(
+                          12, 14, 4, 14,
                         ),
                       ),
                       validator: (v) {

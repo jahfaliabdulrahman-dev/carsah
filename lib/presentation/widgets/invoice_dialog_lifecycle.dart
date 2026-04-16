@@ -53,9 +53,12 @@ mixin InvoiceDialogLifecycle<T extends StatefulWidget> on State<T> {
 
   /// Callback for InvoiceImagePickerWidget.onImageChanged
   void onInvoiceImageChanged(String? newPath) {
+    debugPrint('[INVOICE TRACE] DialogLifecycle — onInvoiceImageChanged called with: $newPath');
+    debugPrint('[INVOICE TRACE] DialogLifecycle — previous transientImagePath: $transientImagePath');
     setState(() {
       transientImagePath = newPath;
     });
+    debugPrint('[INVOICE TRACE] DialogLifecycle — transientImagePath is now: $transientImagePath');
   }
 
   /// Call in dispose() — handles orphan cleanup.
@@ -84,15 +87,21 @@ mixin InvoiceDialogLifecycle<T extends StatefulWidget> on State<T> {
   /// Returns the final path to store in MaintenanceRecord.
   /// Handles old image cleanup if the user replaced the invoice.
   String? finalizeInvoicePath() {
+    debugPrint('[INVOICE TRACE] DialogLifecycle — finalizeInvoicePath() called');
+    debugPrint('[INVOICE TRACE] DialogLifecycle — transientImagePath: $transientImagePath');
+    debugPrint('[INVOICE TRACE] DialogLifecycle — _originalImagePath: $_originalImagePath');
+
     if (transientImagePath != _originalImagePath) {
       // New image was set — delete old one if it existed
       if (_originalImagePath != null) {
+        debugPrint('[INVOICE TRACE] DialogLifecycle — deleting old image: $_originalImagePath');
         _invoiceStorage.deleteInvoice(_originalImagePath!);
       }
     }
 
     // transientImagePath is now the confirmed path
     // (or null if user removed the invoice)
+    debugPrint('[INVOICE TRACE] DialogLifecycle — returning: $transientImagePath');
     return transientImagePath;
   }
 

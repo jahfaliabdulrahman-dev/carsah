@@ -87,6 +87,9 @@ class _EditRecordDialogState extends ConsumerState<EditRecordDialog>
 
     final finalInvoicePath = finalizeInvoicePath();
 
+    debugPrint('[INVOICE TRACE] EditDialog — transientImagePath: $transientImagePath');
+    debugPrint('[INVOICE TRACE] EditDialog — finalPath from finalizeInvoicePath: $finalInvoicePath');
+
     final updated = MaintenanceRecord(
       id: widget.record.id,
       vehicleId: widget.record.vehicleId,
@@ -104,6 +107,8 @@ class _EditRecordDialogState extends ConsumerState<EditRecordDialog>
       createdAt: widget.record.createdAt,
       isSynced: widget.record.isSynced,
     );
+
+    debugPrint('[INVOICE TRACE] EditDialog — record.invoiceImagePath: ${updated.invoiceImagePath}');
 
     await ref.read(maintenanceProvider.notifier).updateRecord(updated);
 
@@ -193,19 +198,27 @@ class _EditRecordDialogState extends ConsumerState<EditRecordDialog>
                       border: const OutlineInputBorder(),
                       isDense: true,
                       prefixIcon: const Icon(Icons.speed_outlined, size: 18),
-                      suffix: Padding(
-                        padding: const EdgeInsets.only(left: 4),
-                        child: Text(
-                          t('km'),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      suffixIcon: ConstrainedBox(
+                        constraints: const BoxConstraints(minWidth: 40),
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: Text(
+                              t('km'),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 14,
+                      suffixIconConstraints: const BoxConstraints(
+                        minWidth: 40,
+                        minHeight: 0,
+                      ),
+                      contentPadding: const EdgeInsetsDirectional.fromSTEB(
+                        12, 14, 4, 14,
                       ),
                     ),
                   ),

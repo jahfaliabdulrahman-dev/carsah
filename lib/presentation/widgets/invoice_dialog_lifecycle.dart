@@ -28,14 +28,34 @@ mixin InvoiceDialogLifecycle<T extends StatefulWidget> on State<T> {
     _didSave = false;
   }
 
-  /// Callback when a new image is picked.
-  /// Calls pickAndAttach which handles dedup and ref counting.
-  ///
-  /// CRITICAL: Detaches old transient BEFORE new pick to prevent phantom files.
-  /// If user picks B then C, B is detached immediately — no leak.
+  /// Callback when user taps the pick button.
+  /// Shows bottom sheet to choose Camera or Gallery.
   Future<void> pickInvoice() async {
-    // Step 1: IMMEDIATELY detach any non-original transient
-    // This prevents phantom files if user picks multiple times
+    final selectedSource = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Camera'),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Gallery'),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (selectedSource == null) return; // User dismissed sheet
+
+    // Phantom Guard: detach old transient BEFORE new pick
     final currentId = transientImageId;
     if (currentId != null && currentId != _originalImageId) {
       debugPrint('[PHANTOM GUARD] Pre-detaching old transient: $currentId');
@@ -46,9 +66,9 @@ mixin InvoiceDialogLifecycle<T extends StatefulWidget> on State<T> {
       });
     }
 
-    // Step 2: Now pick new image
+    // Pick with selected source
     final newId = await _invoiceService.pickAndAttach(
-      source: ImageSource.gallery,
+      source: selectedSource,
     );
 
     if (newId != null) {

@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
 
+import '../../../data/datasources/local/isar_provider.dart';
 import '../../../data/models/maintenance_record.dart';
 import '../../../data/services/ref_counted_invoice_service.dart';
 import '../../providers/maintenance_provider.dart';
@@ -365,14 +365,14 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-/// Invoice card with ref-counted file resolution.
-class _InvoiceCard extends StatelessWidget {
+/// Invoice card with ref-counted file resolution via Riverpod.
+class _InvoiceCard extends ConsumerWidget {
   final int invoiceImageId;
 
   const _InvoiceCard({required this.invoiceImageId});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
@@ -393,7 +393,7 @@ class _InvoiceCard extends StatelessWidget {
             ),
           ),
           FutureBuilder<File?>(
-            future: _resolveFile(),
+            future: _resolveFile(ref),
             builder: (context, snapshot) {
               if (snapshot.connectionState != ConnectionState.done) {
                 return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator(strokeWidth: 2)));
@@ -428,16 +428,14 @@ class _InvoiceCard extends StatelessWidget {
     );
   }
 
-  Future<File?> _resolveFile() async {
-    final isar = Isar.getInstance();
-    if (isar == null) return null;
+  Future<File?> _resolveFile(WidgetRef ref) async {
+    final isar = ref.read(isarProvider);
     final service = RefCountedInvoiceService(isar);
     final file = await service.getFile(invoiceImageId);
     debugPrint('[INVOICE DETAIL] ID=$invoiceImageId file=${file?.path ?? "null"}');
     return file;
   }
 }
-
 /// Fullscreen image viewer accepting File directly.
 class _FullscreenViewer extends StatelessWidget {
   final File file;

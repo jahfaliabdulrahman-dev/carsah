@@ -91,18 +91,21 @@ mixin InvoiceDialogLifecycle<T extends StatefulWidget> on State<T> {
     debugPrint('[INVOICE TRACE] DialogLifecycle — transientImagePath: $transientImagePath');
     debugPrint('[INVOICE TRACE] DialogLifecycle — _originalImagePath: $_originalImagePath');
 
-    if (transientImagePath != _originalImagePath) {
-      // New image was set — delete old one if it existed
-      if (_originalImagePath != null) {
-        debugPrint('[INVOICE TRACE] DialogLifecycle — deleting old image: $_originalImagePath');
-        _invoiceStorage.deleteInvoice(_originalImagePath!);
-      }
-    }
+    // NOTE: Do NOT delete old image here — the Isar update hasn't committed yet.
+    // The detail page may still read the old record with the old path.
+    // Old image cleanup happens in cleanupOldImage() AFTER Isar save succeeds.
 
-    // transientImagePath is now the confirmed path
-    // (or null if user removed the invoice)
     debugPrint('[INVOICE TRACE] DialogLifecycle — returning: $transientImagePath');
     return transientImagePath;
+  }
+
+  /// Call AFTER Isar save succeeds to delete the old image file.
+  /// Must not be called before the new record is committed to the database.
+  void cleanupOldImage() {
+    if (transientImagePath != _originalImagePath && _originalImagePath != null) {
+      debugPrint('[INVOICE TRACE] DialogLifecycle — cleanup: deleting old image: $_originalImagePath');
+      _invoiceStorage.deleteInvoice(_originalImagePath!);
+    }
   }
 
   /// Widget to embed in your dialog body:

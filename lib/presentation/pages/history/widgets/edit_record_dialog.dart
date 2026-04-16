@@ -112,6 +112,9 @@ class _EditRecordDialogState extends ConsumerState<EditRecordDialog>
 
     await ref.read(maintenanceProvider.notifier).updateRecord(updated);
 
+    // Old image cleanup AFTER Isar save succeeds
+    cleanupOldImage();
+
     if (mounted) Navigator.of(context).pop();
   }
 

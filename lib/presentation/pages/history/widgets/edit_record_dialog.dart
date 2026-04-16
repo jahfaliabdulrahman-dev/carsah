@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
 
+import '../../../../data/datasources/local/isar_provider.dart';
 import '../../../../data/models/maintenance_record.dart';
 import '../../../providers/maintenance_provider.dart';
 import '../../../providers/settings_provider.dart';
@@ -45,7 +45,7 @@ class _EditRecordDialogState extends ConsumerState<EditRecordDialog>
   @override
   void initState() {
     super.initState();
-    final isar = Isar.getInstance()!;
+    final isar = ref.read(isarProvider);
     initInvoiceLifecycle(isar: isar, initialImageId: widget.record.invoiceImageId);
     _odometerController = TextEditingController(
       text: widget.record.odometerKm.toString(),

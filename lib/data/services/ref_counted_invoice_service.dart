@@ -40,21 +40,37 @@ class RefCountedInvoiceService {
       final hash = await compute(_hashFile, picked.path);
       debugPrint('[INVOICE HASH] $hash');
 
-      // Check for existing NON-DELETED image with same hash
+      // Check for existing image with same hash (including soft-deleted)
       final existing = await _isar.invoiceImages
           .filter()
           .contentHashEqualTo(hash)
-          .and()
-          .deletedAtIsNull()
           .findFirst();
 
       if (existing != null) {
         await _isar.writeTxn(() async {
+          if (existing.deletedAt != null) {
+            // RESURRECTION: Check if physical file still exists
+            final appDir = await getApplicationDocumentsDirectory();
+            final file = File(p.join(appDir.path, existing.relativePath));
+            if (!await file.exists()) {
+              // File was physically deleted — cannot resurrect
+              debugPrint('[DEDUP] Cannot resurrect — file gone: ${existing.relativePath}');
+              return; // Fall through to "new file" path below
+            }
+            existing.deletedAt = null;
+            debugPrint('[DEDUP] Resurrected soft-deleted: ${existing.relativePath}');
+          }
           existing.refCount++;
           await _isar.invoiceImages.put(existing);
         });
-        debugPrint('[DEDUP] Reusing: ${existing.relativePath} (refCount: ${existing.refCount})');
-        return existing.id;
+
+        // If resurrection succeeded (refCount was incremented), return the ID
+        final refreshed = await _isar.invoiceImages.get(existing.id);
+        if (refreshed != null && refreshed.deletedAt == null && refreshed.refCount > 1) {
+          debugPrint('[DEDUP] Reusing: ${refreshed.relativePath} (refCount: ${refreshed.refCount})');
+          return refreshed.id;
+        }
+        // Otherwise fall through — file was physically deleted, need new copy
       }
 
       // New invoice — save file

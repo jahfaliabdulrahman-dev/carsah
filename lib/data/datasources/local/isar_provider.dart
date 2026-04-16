@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
@@ -7,6 +8,7 @@ import '../../models/maintenance_record.dart';
 import '../../models/service_task.dart';
 import '../../models/part_price.dart';
 import '../../models/invoice_image.dart';
+import '../../services/ref_counted_invoice_service.dart';
 
 /// ============================================================
 /// Isar Database Provider — Phase 1
@@ -95,6 +97,17 @@ Future<Isar> initIsarDatabase() async {
 
   // Auto-seed DISABLED — WelcomePage handles first-run vehicle creation.
   // await _seedDefaultVehicle(isar);
+
+  // GC: Clean up any soft-deleted invoice images from previous sessions
+  try {
+    final invoiceService = RefCountedInvoiceService(isar);
+    final cleaned = await invoiceService.runGarbageCollection();
+    if (cleaned > 0) {
+      debugPrint('[GC] Startup cleanup: $cleaned entries removed');
+    }
+  } catch (e) {
+    debugPrint('[GC] Startup cleanup failed (non-blocking): $e');
+  }
 
   return isar;
 }

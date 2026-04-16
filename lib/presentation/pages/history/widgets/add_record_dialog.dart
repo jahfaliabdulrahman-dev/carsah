@@ -3,8 +3,8 @@ import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
 
+import '../../../../data/datasources/local/isar_provider.dart';
 import '../../../../data/models/maintenance_record.dart';
 import '../../../providers/maintenance_provider.dart';
 import '../../../providers/service_task_provider.dart';
@@ -63,7 +63,7 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog>
   @override
   void initState() {
     super.initState();
-    final isar = Isar.getInstance()!;
+    final isar = ref.read(isarProvider);
     initInvoiceLifecycle(isar: isar, initialImageId: null);
     _preFillOdometer();
   }
@@ -113,7 +113,7 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog>
   ///   - Cancel: returns to form to correct the value.
   ///   - Update & Save: updates vehicle odometer, then saves records.
   Future<void> _onSave() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final vehicleState = await ref.read(vehicleProvider.future);
     final vehicle = vehicleState.activeVehicle;

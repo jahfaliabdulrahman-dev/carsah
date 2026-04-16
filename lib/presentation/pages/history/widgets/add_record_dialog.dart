@@ -278,9 +278,10 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog>
       contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       content: SizedBox(
         width: double.maxFinite,
-        child: Form(
-          key: _formKey,
-          child: Column(
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               // — Date + Odometer (side by side) —
@@ -316,13 +317,17 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog>
                             vertical: 14,
                           ),
                         ),
-                        child: Text(
-                          '${_selectedDate.year}-'
-                          '${_selectedDate.month.toString().padLeft(2, '0')}-'
-                          '${_selectedDate.day.toString().padLeft(2, '0')}',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: AlignmentDirectional.centerStart,
+                          child: Text(
+                            '${_selectedDate.year}-'
+                            '${_selectedDate.month.toString().padLeft(2, '0')}-'
+                            '${_selectedDate.day.toString().padLeft(2, '0')}',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
@@ -342,7 +347,16 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog>
                         border: const OutlineInputBorder(),
                         isDense: true,
                         prefixIcon: const Icon(Icons.speed_outlined, size: 18),
-                        suffixText: t('km'),
+                        suffix: Padding(
+                          padding: const EdgeInsets.only(left: 4),
+                          child: Text(
+                            t('km'),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 14,
@@ -523,10 +537,11 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog>
                   ),
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ], // Column children
+          ), // Column
+          ), // Form
+          ), // SingleChildScrollView
+        ), // SizedBox
       actions: [
         TextButton(
           onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),

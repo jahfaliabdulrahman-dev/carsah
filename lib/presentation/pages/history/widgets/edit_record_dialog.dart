@@ -166,13 +166,17 @@ class _EditRecordDialogState extends ConsumerState<EditRecordDialog>
                           vertical: 14,
                         ),
                       ),
-                      child: Text(
-                        '${_selectedDate.year}-'
-                        '${_selectedDate.month.toString().padLeft(2, '0')}-'
-                        '${_selectedDate.day.toString().padLeft(2, '0')}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          '${_selectedDate.year}-'
+                          '${_selectedDate.month.toString().padLeft(2, '0')}-'
+                          '${_selectedDate.day.toString().padLeft(2, '0')}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -189,7 +193,16 @@ class _EditRecordDialogState extends ConsumerState<EditRecordDialog>
                       border: const OutlineInputBorder(),
                       isDense: true,
                       prefixIcon: const Icon(Icons.speed_outlined, size: 18),
-                      suffixText: t('km'),
+                      suffix: Padding(
+                        padding: const EdgeInsets.only(left: 4),
+                        child: Text(
+                          t('km'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 14,

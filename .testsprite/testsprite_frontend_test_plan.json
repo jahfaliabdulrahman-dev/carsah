@@ -1,0 +1,159 @@
+{
+  "projectName": "CarSah",
+  "testType": "frontend",
+  "generatedAt": "2026-04-16T10:00:00.000Z",
+  "testCases": [
+    {
+      "id": "TC001",
+      "title": "Welcome page displays correctly in both languages",
+      "description": "Verify the welcome page shows Arabic and English text correctly with proper RTL/LTR layout",
+      "priority": "high",
+      "category": "UI/Localization",
+      "steps": [
+        "Launch the app",
+        "Verify welcome text is displayed",
+        "Switch language to Arabic",
+        "Verify RTL layout is applied",
+        "Verify all text is properly translated"
+      ],
+      "expectedResult": "Welcome page renders correctly in both Arabic and English with proper text direction"
+    },
+    {
+      "id": "TC002",
+      "title": "Vehicle creation with all required fields",
+      "description": "Test creating a new vehicle with make, model, year, and current mileage",
+      "priority": "high",
+      "category": "Vehicle Management",
+      "steps": [
+        "Navigate to vehicle setup",
+        "Enter vehicle make (e.g., Tank 300)",
+        "Enter model year",
+        "Enter current mileage",
+        "Save vehicle",
+        "Verify vehicle appears in dashboard"
+      ],
+      "expectedResult": "Vehicle is created and displayed in the dashboard with correct information"
+    },
+    {
+      "id": "TC003",
+      "title": "Maintenance task scheduling",
+      "description": "Verify maintenance tasks can be scheduled based on mileage and time intervals",
+      "priority": "high",
+      "category": "Maintenance",
+      "steps": [
+        "Create a vehicle",
+        "Add a maintenance task (e.g., Oil Change)",
+        "Set mileage interval (e.g., every 5000 km)",
+        "Set time interval (e.g., every 6 months)",
+        "Verify task appears in task list",
+        "Verify due date is calculated correctly"
+      ],
+      "expectedResult": "Maintenance task is created with proper intervals and due date"
+    },
+    {
+      "id": "TC004",
+      "title": "Cost prediction chart displays data",
+      "description": "Test that the cost trend chart renders with historical maintenance data",
+      "priority": "medium",
+      "category": "Cost Prediction",
+      "steps": [
+        "Add multiple maintenance records with costs",
+        "Navigate to cost prediction/chart view",
+        "Verify chart is rendered",
+        "Verify data points match entered costs",
+        "Verify Z-score anomaly detection works"
+      ],
+      "expectedResult": "Cost trend chart displays with correct data points and anomaly highlighting"
+    },
+    {
+      "id": "TC005",
+      "title": "Task completion and history tracking",
+      "description": "Verify completing a maintenance task updates history and recalculates next due date",
+      "priority": "high",
+      "category": "Maintenance",
+      "steps": [
+        "Create a maintenance task",
+        "Mark task as completed",
+        "Enter completion date and cost",
+        "Verify task moves to history",
+        "Verify next due date is calculated from new completion date"
+      ],
+      "expectedResult": "Task is marked complete, added to history, and next due date is recalculated"
+    },
+    {
+      "id": "TC006",
+      "title": "Multiple vehicle management",
+      "description": "Test adding and switching between multiple vehicles",
+      "priority": "medium",
+      "category": "Vehicle Management",
+      "steps": [
+        "Create first vehicle",
+        "Create second vehicle",
+        "Switch between vehicles",
+        "Verify each vehicle shows its own maintenance data",
+        "Verify no data leakage between vehicles"
+      ],
+      "expectedResult": "Each vehicle maintains separate maintenance records"
+    },
+    {
+      "id": "TC007",
+      "title": "Bilingual date and number formatting",
+      "description": "Verify dates and numbers are formatted according to locale settings",
+      "priority": "medium",
+      "category": "UI/Localization",
+      "steps": [
+        "Set language to English",
+        "Verify dates show MM/DD/YYYY format",
+        "Switch language to Arabic",
+        "Verify dates show DD/MM/YYYY format",
+        "Verify numbers use appropriate separators"
+      ],
+      "expectedResult": "Dates and numbers are formatted correctly for each locale"
+    },
+    {
+      "id": "TC008",
+      "title": "Service task CRUD operations",
+      "description": "Test creating, reading, updating, and deleting service tasks",
+      "priority": "high",
+      "category": "Maintenance",
+      "steps": [
+        "Create a new service task",
+        "Read and verify task details",
+        "Update task name and interval",
+        "Delete task",
+        "Verify task is removed from list"
+      ],
+      "expectedResult": "All CRUD operations work correctly for service tasks"
+    },
+    {
+      "id": "TC009",
+      "title": "Dashboard summary accuracy",
+      "description": "Verify dashboard shows correct counts for upcoming and overdue tasks",
+      "priority": "high",
+      "category": "Dashboard",
+      "steps": [
+        "Create vehicle with multiple tasks",
+        "Set some tasks as overdue",
+        "Set some tasks as upcoming",
+        "Navigate to dashboard",
+        "Verify counts match actual data"
+      ],
+      "expectedResult": "Dashboard accurately reflects task status counts"
+    },
+    {
+      "id": "TC010",
+      "title": "Data persistence across app restarts",
+      "description": "Verify all data persists after closing and reopening the app",
+      "priority": "high",
+      "category": "Data Persistence",
+      "steps": [
+        "Create vehicle with maintenance records",
+        "Close the app completely",
+        "Reopen the app",
+        "Verify all data is still present",
+        "Verify no data corruption"
+      ],
+      "expectedResult": "All data persists correctly across app restarts via Isar database"
+    }
+  ]
+}

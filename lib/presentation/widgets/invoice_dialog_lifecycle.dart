@@ -42,13 +42,14 @@ mixin InvoiceDialogLifecycle<T extends StatefulWidget> on State<T> {
   String? transientImagePath;
 
   /// The path that existed BEFORE this dialog session.
-  /// Used to detect "replaced" images that also need cleanup.
   String? _originalImagePath;
+  bool _didSave = false; // Track whether save was confirmed
 
   /// Call in initState with the existing record's image path (or null for new).
   void initInvoiceLifecycle({String? initialPath}) {
     _originalImagePath = initialPath;
     transientImagePath = initialPath;
+    _didSave = false;
   }
 
   /// Callback for InvoiceImagePickerWidget.onImageChanged
@@ -61,22 +62,22 @@ mixin InvoiceDialogLifecycle<T extends StatefulWidget> on State<T> {
     debugPrint('[INVOICE TRACE] DialogLifecycle — transientImagePath is now: $transientImagePath');
   }
 
-  /// Call in dispose() — handles orphan cleanup.
-  ///
-  /// Three scenarios:
-  /// 1. User captured image, cancelled dialog → DELETE transient
-  /// 2. User replaced image, cancelled dialog → DELETE new, KEEP original
-  /// 3. User removed image, cancelled dialog → KEEP original (no action)
+  /// Call in dispose() — handles orphan cleanup ONLY if save was not confirmed.
   void disposeInvoiceLifecycle() {
+    // If save was confirmed, do NOT delete — cleanup happens in cleanupOldImage()
+    if (_didSave) {
+      debugPrint('[INVOICE TRACE] DialogLifecycle — dispose: save confirmed, skipping cleanup');
+      return;
+    }
+
     if (transientImagePath == null && _originalImagePath != null) {
-      // Scenario 3: User removed image but cancelled — restore original
+      // User removed image but cancelled — original still exists, no action
       return;
     }
 
     if (transientImagePath != null &&
         transientImagePath != _originalImagePath) {
-      // Scenario 1 or 2: New image captured but dialog dismissed
-      // Delete the orphan
+      // Dialog dismissed WITHOUT saving — delete orphan
       debugPrint('[INVOICE TRACE] DialogLifecycle — dispose: orphan cleanup $transientImagePath');
       _invoiceStorage.deleteInvoice(transientImagePath!);
     }
@@ -94,9 +95,8 @@ mixin InvoiceDialogLifecycle<T extends StatefulWidget> on State<T> {
     debugPrint('[INVOICE TRACE] DialogLifecycle — transientImagePath: $transientImagePath');
     debugPrint('[INVOICE TRACE] DialogLifecycle — _originalImagePath: $_originalImagePath');
 
-    // NOTE: Do NOT delete old image here — the Isar update hasn't committed yet.
-    // The detail page may still read the old record with the old path.
-    // Old image cleanup happens in cleanupOldImage() AFTER Isar save succeeds.
+    // Mark save as confirmed — dispose will skip orphan cleanup
+    _didSave = true;
 
     debugPrint('[INVOICE TRACE] DialogLifecycle — returning: $transientImagePath');
     return transientImagePath;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:isar/isar.dart';
 
 import '../../../../data/models/maintenance_record.dart';
 import '../../../providers/maintenance_provider.dart';
@@ -44,7 +45,8 @@ class _EditRecordDialogState extends ConsumerState<EditRecordDialog>
   @override
   void initState() {
     super.initState();
-    initInvoiceLifecycle(initialPath: widget.record.invoiceImagePath);
+    final isar = Isar.getInstance()!;
+    initInvoiceLifecycle(isar: isar, initialImageId: widget.record.invoiceImageId);
     _odometerController = TextEditingController(
       text: widget.record.odometerKm.toString(),
     );
@@ -85,10 +87,10 @@ class _EditRecordDialogState extends ConsumerState<EditRecordDialog>
         ? null
         : _notesController.text.trim();
 
-    final finalInvoicePath = finalizeInvoicePath();
+    final finalInvoiceId = finalizeInvoiceId();
 
-    debugPrint('[INVOICE TRACE] EditDialog — transientImagePath: $transientImagePath');
-    debugPrint('[INVOICE TRACE] EditDialog — finalPath from finalizeInvoicePath: $finalInvoicePath');
+    debugPrint('[INVOICE TRACE] EditDialog — transientImageId: $transientImageId');
+    debugPrint('[INVOICE TRACE] EditDialog — finalId: $finalInvoiceId');
 
     final updated = MaintenanceRecord(
       id: widget.record.id,
@@ -102,13 +104,13 @@ class _EditRecordDialogState extends ConsumerState<EditRecordDialog>
       partsReplaced: widget.record.partsReplaced,
       taskKeys: widget.record.taskKeys,
       providerName: widget.record.providerName,
-      invoiceImagePath: finalInvoicePath,
+      invoiceImageId: finalInvoiceId,
       serviceDate: _selectedDate,
       createdAt: widget.record.createdAt,
       isSynced: widget.record.isSynced,
     );
 
-    debugPrint('[INVOICE TRACE] EditDialog — record.invoiceImagePath: ${updated.invoiceImagePath}');
+    debugPrint('[INVOICE TRACE] EditDialog — record.invoiceImageId: ${updated.invoiceImageId}');
 
     try {
       await ref.read(maintenanceProvider.notifier).updateRecord(updated);

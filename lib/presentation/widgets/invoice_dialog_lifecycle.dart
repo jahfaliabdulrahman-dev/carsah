@@ -1,128 +1,215 @@
-/// CANCEL-ORPHAN PROTOCOL — Dialog Lifecycle Integration
-///
-/// This snippet shows how to integrate InvoiceImagePickerWidget into
-/// Add/Edit Record dialogs with proper orphan cleanup.
-///
-/// KEY RULE: If the user captures an image but dismisses without saving,
-/// the transient image MUST be deleted to prevent sandbox orphans.
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:isar/isar.dart';
 
-import '../../data/services/local_invoice_storage_service.dart';
-import '../widgets/invoice_image_picker_widget.dart';
+import '../../data/services/ref_counted_invoice_service.dart';
 
-/// Mixin for dialogs that contain an InvoiceImagePickerWidget.
+/// Cancel-Orphan Protocol — Dialog Lifecycle for Normalized Invoice Architecture
 ///
-/// Usage:
-///   class _AddRecordDialogState extends State<AddRecordDialog>
-///       with InvoiceDialogLifecycle {
-///
-///     @override
-///     void initState() {
-///       super.initState();
-///       initInvoiceLifecycle(initialPath: null);
-///     }
-///
-///     @override
-///     void dispose() {
-///       disposeInvoiceLifecycle(); // ← Orphan cleanup here
-///       super.dispose();
-///     }
-///
-///     // In save handler:
-///     // record.invoiceImagePath = transientImagePath;
-///   }
+/// Uses int? transientImageId (InvoiceImage PK) instead of string paths.
+/// RefCountedInvoiceService handles deduplication, ref counting, and file I/O.
 mixin InvoiceDialogLifecycle<T extends StatefulWidget> on State<T> {
-  final LocalInvoiceStorageService _invoiceStorage =
-      LocalInvoiceStorageService();
+  late RefCountedInvoiceService _invoiceService;
 
-  /// Tracks the current image path in dialog state.
-  /// - null = no image attached
-  /// - non-null = image captured (transient until save confirms)
-  String? transientImagePath;
+  /// Tracks the current InvoiceImage ID in dialog state.
+  int? transientImageId;
 
-  /// The path that existed BEFORE this dialog session.
-  String? _originalImagePath;
-  bool _didSave = false; // Track whether save was confirmed
+  /// The ID that existed BEFORE this dialog session.
+  int? _originalImageId;
+  bool _didSave = false;
 
-  /// Call in initState with the existing record's image path (or null for new).
-  void initInvoiceLifecycle({String? initialPath}) {
-    _originalImagePath = initialPath;
-    transientImagePath = initialPath;
+  /// Call in initState with the Isar instance and existing record's invoiceImageId.
+  void initInvoiceLifecycle({required Isar isar, int? initialImageId}) {
+    _invoiceService = RefCountedInvoiceService(isar);
+    _originalImageId = initialImageId;
+    transientImageId = initialImageId;
     _didSave = false;
   }
 
-  /// Callback for InvoiceImagePickerWidget.onImageChanged
-  void onInvoiceImageChanged(String? newPath) {
-    debugPrint('[INVOICE TRACE] DialogLifecycle — onInvoiceImageChanged called with: $newPath');
-    debugPrint('[INVOICE TRACE] DialogLifecycle — previous transientImagePath: $transientImagePath');
-    setState(() {
-      transientImagePath = newPath;
-    });
-    debugPrint('[INVOICE TRACE] DialogLifecycle — transientImagePath is now: $transientImagePath');
+  /// Callback when a new image is picked.
+  /// Calls pickAndAttach which handles dedup and ref counting.
+  Future<void> pickInvoice() async {
+    final newId = await _invoiceService.pickAndAttach(
+      source: ImageSource.gallery,
+    );
+
+    if (newId != null) {
+      debugPrint('[DEDUP] pickAndAttach returned ID: $newId');
+
+      // Detach old reference if replacing
+      if (transientImageId != null && transientImageId != _originalImageId) {
+        debugPrint('[REF_COUNT CHANGE] Detaching old transient: $transientImageId');
+        await _invoiceService.detachOrDelete(transientImageId!);
+      }
+
+      setState(() {
+        transientImageId = newId;
+      });
+      debugPrint('[REF_COUNT CHANGE] transientImageId set to: $newId');
+    }
   }
 
   /// Call in dispose() — handles orphan cleanup ONLY if save was not confirmed.
-  void disposeInvoiceLifecycle() {
-    // If save was confirmed, do NOT delete — cleanup happens in cleanupOldImage()
+  Future<void> disposeInvoiceLifecycle() async {
     if (_didSave) {
-      debugPrint('[INVOICE TRACE] DialogLifecycle — dispose: save confirmed, skipping cleanup');
+      debugPrint('[LIFECYCLE] dispose: save confirmed, skipping cleanup');
       return;
     }
 
-    if (transientImagePath == null && _originalImagePath != null) {
-      // User removed image but cancelled — original still exists, no action
-      return;
+    if (transientImageId != null && transientImageId != _originalImageId) {
+      debugPrint('[LIFECYCLE] dispose: orphan cleanup for ID $transientImageId');
+      await _invoiceService.detachOrDelete(transientImageId!);
     }
-
-    if (transientImagePath != null &&
-        transientImagePath != _originalImagePath) {
-      // Dialog dismissed WITHOUT saving — delete orphan
-      debugPrint('[INVOICE TRACE] DialogLifecycle — dispose: orphan cleanup $transientImagePath');
-      _invoiceStorage.deleteInvoice(transientImagePath!);
-    }
-
-    // Forensic: log state on dispose
-    debugPrint('[INVOICE TRACE] DialogLifecycle — dispose: transientImagePath=$transientImagePath, original=$_originalImagePath');
   }
 
-  /// Call this in your save/confirm handler BEFORE saving to Isar.
-  ///
-  /// Returns the final path to store in MaintenanceRecord.
-  /// Handles old image cleanup if the user replaced the invoice.
+  /// Mark save as confirmed.
   String? finalizeInvoicePath() {
-    debugPrint('[INVOICE TRACE] DialogLifecycle — finalizeInvoicePath() called');
-    debugPrint('[INVOICE TRACE] DialogLifecycle — transientImagePath: $transientImagePath');
-    debugPrint('[INVOICE TRACE] DialogLifecycle — _originalImagePath: $_originalImagePath');
-
-    // Mark save as confirmed — dispose will skip orphan cleanup
+    // Kept for backward compat — returns null, ID is used instead
     _didSave = true;
+    debugPrint('[LIFECYCLE] finalize: _didSave=true, transientImageId=$transientImageId');
+    return null;
+  }
 
-    debugPrint('[INVOICE TRACE] DialogLifecycle — returning: $transientImagePath');
-    return transientImagePath;
+  /// Mark save as confirmed (new ID-based method).
+  int? finalizeInvoiceId() {
+    _didSave = true;
+    debugPrint('[LIFECYCLE] finalize: _didSave=true, returning ID=$transientImageId');
+    return transientImageId;
   }
 
   /// Revert save confirmation if Isar write fails.
-  /// Dispose will then correctly clean up the orphaned file.
   void revertSaveConfirmation() {
-    debugPrint('[INVOICE TRACE] DialogLifecycle — reverting _didSave to false (DB write failed)');
+    debugPrint('[LIFECYCLE] reverting _didSave to false');
     _didSave = false;
   }
 
-  /// Call AFTER Isar save succeeds to delete the old image file.
-  /// Must not be called before the new record is committed to the database.
-  void cleanupOldImage() {
-    if (transientImagePath != _originalImagePath && _originalImagePath != null) {
-      debugPrint('[INVOICE TRACE] DialogLifecycle — cleanup: deleting old image: $_originalImagePath');
-      _invoiceStorage.deleteInvoice(_originalImagePath!);
+  /// Cleanup old image AFTER successful Isar save.
+  Future<void> cleanupOldImage() async {
+    if (_originalImageId != null && _originalImageId != transientImageId) {
+      debugPrint('[REF_COUNT CHANGE] cleanupOldImage: detaching $_originalImageId');
+      await _invoiceService.detachOrDelete(_originalImageId!);
     }
   }
 
-  /// Widget to embed in your dialog body:
+  /// Get the File for the current transient image.
+  Future<File?> resolveCurrentInvoiceFile() async {
+    if (transientImageId == null) return null;
+    return _invoiceService.getFile(transientImageId!);
+  }
+
+  /// Widget to embed in dialog body.
   Widget buildInvoicePicker() {
-    return InvoiceImagePickerWidget(
-      currentImagePath: transientImagePath,
-      onImageChanged: onInvoiceImageChanged,
+    return InvoicePickerWidget(
+      imageId: transientImageId,
+      onPickPressed: pickInvoice,
+      onRemovePressed: () async {
+        if (transientImageId != null && transientImageId != _originalImageId) {
+          await _invoiceService.detachOrDelete(transientImageId!);
+        }
+        setState(() {
+          transientImageId = null;
+        });
+      },
+    );
+  }
+}
+
+/// Standalone invoice picker widget for embedding in dialogs.
+class InvoicePickerWidget extends StatelessWidget {
+  final int? imageId;
+  final VoidCallback onPickPressed;
+  final VoidCallback onRemovePressed;
+
+  const InvoicePickerWidget({
+    super.key,
+    required this.imageId,
+    required this.onPickPressed,
+    required this.onRemovePressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Invoice Photo',
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (imageId == null)
+          _buildEmptyState(theme)
+        else
+          _buildFilledState(context, theme),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState(ThemeData theme) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: onPickPressed,
+            icon: const Icon(Icons.photo_library_outlined, size: 18),
+            label: const Text('Gallery'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilledState(BuildContext context, ThemeData theme) {
+    return SizedBox(
+      height: 80,
+      width: 80,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Thumbnail placeholder — actual image loaded via FutureBuilder in detail
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.receipt_long,
+              color: theme.colorScheme.onPrimaryContainer,
+            ),
+          ),
+          // Remove button
+          Positioned(
+            top: -6,
+            right: -6,
+            child: GestureDetector(
+              onTap: onRemovePressed,
+              child: Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.error,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.close, size: 14, color: theme.colorScheme.onError),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

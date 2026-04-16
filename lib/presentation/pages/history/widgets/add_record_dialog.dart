@@ -3,9 +3,9 @@ import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:isar/isar.dart';
 
 import '../../../../data/models/maintenance_record.dart';
-import '../../../../data/services/local_invoice_storage_service.dart';
 import '../../../providers/maintenance_provider.dart';
 import '../../../providers/service_task_provider.dart';
 import '../../../providers/settings_provider.dart';
@@ -63,7 +63,8 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog>
   @override
   void initState() {
     super.initState();
-    initInvoiceLifecycle(initialPath: null);
+    final isar = Isar.getInstance()!;
+    initInvoiceLifecycle(isar: isar, initialImageId: null);
     _preFillOdometer();
   }
 
@@ -196,13 +197,10 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog>
           isArabic ? task.displayNameAr : task.displayNameEn;
     }
 
-    final finalInvoicePath = finalizeInvoicePath();
+    final finalInvoiceId = finalizeInvoiceId();
 
-    debugPrint('[INVOICE TRACE] AddDialog — transientImagePath: $transientImagePath');
-    debugPrint('[INVOICE TRACE] AddDialog — finalPath from finalizeInvoicePath: $finalInvoicePath');
-
-    // Generate unique invoice file per record to prevent shared resource leak
-    final invoiceService = LocalInvoiceStorageService();
+    debugPrint('[INVOICE TRACE] AddDialog — transientImageId: $transientImageId');
+    debugPrint('[INVOICE TRACE] AddDialog — finalId from finalizeInvoiceId: $finalInvoiceId');
 
     int savedCount = 0;
     int failedCount = 0;
@@ -212,12 +210,7 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog>
       final sanitizedCost = _sanitizeDigits(costText);
       final partsCost = double.tryParse(sanitizedCost) ?? 0.0;
 
-      // Each record gets its own copy of the invoice file
-      String? recordInvoicePath;
-      if (finalInvoicePath != null) {
-        recordInvoicePath = await invoiceService.copyInvoiceForRecord(finalInvoicePath);
-      }
-
+      // All records share the same InvoiceImage ID — refCount handles shared resource
       final record = MaintenanceRecord(
         vehicleId: vehicleId,
         serviceType: taskMap[taskKey] ?? taskKey,
@@ -228,12 +221,12 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog>
         laborCostSar: laborPerTask,
         partsReplaced: [taskMap[taskKey] ?? taskKey],
         taskKeys: [taskKey],
-        invoiceImagePath: recordInvoicePath,
+        invoiceImageId: finalInvoiceId,
         serviceDate: _selectedDate,
         createdAt: _selectedDate,
       );
 
-      debugPrint('[INVOICE TRACE] AddDialog — record[$taskKey].invoiceImagePath: ${record.invoiceImagePath}');
+      debugPrint('[INVOICE TRACE] AddDialog — record[$taskKey].invoiceImageId: ${record.invoiceImageId}');
 
       try {
         final success = await ref
@@ -265,14 +258,8 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog>
     if (!mounted) return;
 
     if (failedCount == 0 && savedCount > 0) {
-      // Batch copies done — clean up original transient file
-      if (finalInvoicePath != null) {
-        await invoiceService.deleteInvoice(finalInvoicePath);
-        debugPrint('[INVOICE TRACE] AddDialog — original transient file cleaned up');
-      }
-
       // Old image cleanup AFTER all saves succeed
-      cleanupOldImage();
+      await cleanupOldImage();
       Navigator.of(context).pop();
     } else {
       setState(() => _isSubmitting = false);

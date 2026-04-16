@@ -1,14 +1,16 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:isar/isar.dart';
 
 import '../../../data/models/maintenance_record.dart';
-import '../../../data/services/local_invoice_storage_service.dart';
+import '../../../data/services/ref_counted_invoice_service.dart';
 import '../../providers/maintenance_provider.dart';
 import '../../providers/service_task_provider.dart';
 import '../../providers/settings_provider.dart';
 import 'history_page.dart' show resolveServiceName;
 import 'widgets/edit_record_dialog.dart';
-import '../../widgets/invoice_image_picker_widget.dart';
 
 /// ============================================================
 /// Record Detail Page — View / Edit / Delete
@@ -250,103 +252,8 @@ class RecordDetailPage extends ConsumerWidget {
             const SizedBox(height: 12),
 
             // — Invoice Image —
-            if (record.invoiceImagePath != null) ...[
-              Builder(
-                builder: (context) {
-                  debugPrint('[INVOICE DETAIL] record.invoiceImagePath: ${record.invoiceImagePath}');
-                  return const SizedBox.shrink();
-                },
-              ),
-              Card(
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => InvoiceFullscreenViewer(
-                        imagePath: record.invoiceImagePath!,
-                      ),
-                    );
-                  },
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.receipt_long_outlined,
-                              size: 18,
-                              color: colorScheme.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Invoice', // TODO: t('invoice')
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
-                                  ?.copyWith(fontWeight: FontWeight.w600),
-                            ),
-                            const Spacer(),
-                            Icon(
-                              Icons.fullscreen,
-                              size: 18,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ],
-                        ),
-                      ),
-                      FutureBuilder(
-                        future: LocalInvoiceStorageService()
-                            .resolveInvoiceFile(record.invoiceImagePath),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState !=
-                              ConnectionState.done) {
-                            return const SizedBox(
-                              height: 200,
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2),
-                              ),
-                            );
-                          }
-                          final file = snapshot.data;
-                          if (file == null) {
-                            return Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.broken_image_outlined,
-                                    color: colorScheme.error,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Image not found',
-                                    style: TextStyle(
-                                        color: colorScheme.error),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
-                          return Image(
-                            image: ResizeImage(
-                              FileImage(file),
-                              width: 1080, // Max decode width — prevents OOM on 12MP+ photos
-                            ),
-                            width: double.infinity,
-                            height: 200,
-                            fit: BoxFit.cover,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+            if (record.invoiceImageId != null)
+              _InvoiceCard(invoiceImageId: record.invoiceImageId!),
           ],
         ),
       ),
@@ -454,6 +361,117 @@ class _InfoRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Invoice card with ref-counted file resolution.
+class _InvoiceCard extends StatelessWidget {
+  final int invoiceImageId;
+
+  const _InvoiceCard({required this.invoiceImageId});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Row(
+              children: [
+                Icon(Icons.receipt_long_outlined, size: 18, color: colorScheme.primary),
+                const SizedBox(width: 8),
+                Text('Invoice', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                const Spacer(),
+                Icon(Icons.fullscreen, size: 18, color: colorScheme.onSurfaceVariant),
+              ],
+            ),
+          ),
+          FutureBuilder<File?>(
+            future: _resolveFile(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator(strokeWidth: 2)));
+              }
+              final file = snapshot.data;
+              if (file == null) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(children: [
+                    Icon(Icons.broken_image_outlined, color: colorScheme.error),
+                    const SizedBox(width: 8),
+                    Text('Image not found', style: TextStyle(color: colorScheme.error)),
+                  ]),
+                );
+              }
+              return GestureDetector(
+                onTap: () => showDialog(
+                  context: context,
+                  builder: (_) => _FullscreenViewer(file: file),
+                ),
+                child: Image(
+                  image: ResizeImage(FileImage(file), width: 1080),
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.cover,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<File?> _resolveFile() async {
+    final isar = Isar.getInstance();
+    if (isar == null) return null;
+    final service = RefCountedInvoiceService(isar);
+    final file = await service.getFile(invoiceImageId);
+    debugPrint('[INVOICE DETAIL] ID=$invoiceImageId file=${file?.path ?? "null"}');
+    return file;
+  }
+}
+
+/// Fullscreen image viewer accepting File directly.
+class _FullscreenViewer extends StatelessWidget {
+  final File file;
+
+  const _FullscreenViewer({required this.file});
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog.fullscreen(
+      backgroundColor: Colors.black,
+      child: Stack(
+        children: [
+          Center(
+            child: InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: Image(
+                image: ResizeImage(FileImage(file), width: 2160),
+              ),
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            right: 16,
+            child: IconButton(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const CircleAvatar(
+                backgroundColor: Colors.black54,
+                child: Icon(Icons.close, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

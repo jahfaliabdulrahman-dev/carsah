@@ -258,9 +258,9 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog>
     if (!mounted) return;
 
     if (failedCount == 0 && savedCount > 0) {
-      // Old image cleanup AFTER all saves succeed
+      // Old image cleanup — detachOrDelete handles refCount atomically
       await cleanupOldImage();
-      Navigator.of(context).pop();
+      if (mounted) Navigator.of(context).pop();
     } else {
       setState(() => _isSubmitting = false);
       final message = savedCount > 0

@@ -115,11 +115,8 @@ class _EditRecordDialogState extends ConsumerState<EditRecordDialog>
     try {
       await ref.read(maintenanceProvider.notifier).updateRecord(updated);
 
-      // Targeted state update — no full invalidation, no UI shake
-      ref.read(maintenanceProvider.notifier).updateRecordInState(updated);
-
-      // Old image cleanup AFTER Isar save AND state update
-      cleanupOldImage();
+      // Atomic update handles both record save AND old invoice cleanup
+      // No separate cleanupOldImage() needed — it's in the transaction
 
       if (mounted) Navigator.of(context).pop();
     } catch (e) {

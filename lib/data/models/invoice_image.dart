@@ -24,6 +24,11 @@ class InvoiceImage {
   /// File size in bytes (for diagnostics)
   int fileSizeBytes = 0;
 
+  /// Soft delete: non-null value marks this as pending physical deletion.
+  /// GC process re-attempts file deletion for these entries.
+  /// Soft-deleted entries are excluded from deduplication.
+  DateTime? deletedAt;
+
   late DateTime createdAt;
 
   InvoiceImage({

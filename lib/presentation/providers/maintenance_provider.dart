@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/datasources/local/isar_provider.dart';
 import '../../data/models/maintenance_record.dart';
 import '../../data/repositories/maintenance_repository_impl.dart';
 import '../../data/repositories/service_task_repository_impl.dart';
+import '../../data/services/ref_counted_invoice_service.dart';
 import 'service_task_provider.dart';
 import 'vehicle_provider.dart';
 
@@ -159,10 +161,24 @@ class MaintenanceNotifier extends AsyncNotifier<MaintenanceState> {
   /// Returns:
   ///   true if the record was found and updated.
   Future<bool> updateRecord(MaintenanceRecord record) async {
+    // Read old invoice ID BEFORE update for atomic cleanup
+    final oldRecord = state.valueOrNull?.records.firstWhere(
+      (r) => r.id == record.id,
+      orElse: () => record,
+    );
+    final oldInvoiceImageId = oldRecord?.invoiceImageId;
+
     final success = await _repo.updateRecord(record);
     if (success) {
-      ref.invalidateSelf();
-      ref.invalidate(serviceTaskProvider);
+      // ATOMIC cleanup: detach old invoice ONLY after record update succeeds
+      if (oldInvoiceImageId != null && oldInvoiceImageId != record.invoiceImageId) {
+        final invoiceService = RefCountedInvoiceService(_repo.isar);
+        await invoiceService.detachOrDelete(oldInvoiceImageId);
+        debugPrint('[ATOMIC UPDATE] Old invoice detached: $oldInvoiceImageId');
+      }
+
+      // Targeted state update — no full invalidation
+      updateRecordInState(record);
     }
     return success;
   }

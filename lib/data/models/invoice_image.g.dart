@@ -27,18 +27,23 @@ const InvoiceImageSchema = CollectionSchema(
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'fileSizeBytes': PropertySchema(
+    r'deletedAt': PropertySchema(
       id: 2,
+      name: r'deletedAt',
+      type: IsarType.dateTime,
+    ),
+    r'fileSizeBytes': PropertySchema(
+      id: 3,
       name: r'fileSizeBytes',
       type: IsarType.long,
     ),
     r'refCount': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'refCount',
       type: IsarType.long,
     ),
     r'relativePath': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'relativePath',
       type: IsarType.string,
     )
@@ -90,9 +95,10 @@ void _invoiceImageSerialize(
 ) {
   writer.writeString(offsets[0], object.contentHash);
   writer.writeDateTime(offsets[1], object.createdAt);
-  writer.writeLong(offsets[2], object.fileSizeBytes);
-  writer.writeLong(offsets[3], object.refCount);
-  writer.writeString(offsets[4], object.relativePath);
+  writer.writeDateTime(offsets[2], object.deletedAt);
+  writer.writeLong(offsets[3], object.fileSizeBytes);
+  writer.writeLong(offsets[4], object.refCount);
+  writer.writeString(offsets[5], object.relativePath);
 }
 
 InvoiceImage _invoiceImageDeserialize(
@@ -103,11 +109,12 @@ InvoiceImage _invoiceImageDeserialize(
 ) {
   final object = InvoiceImage(
     contentHash: reader.readString(offsets[0]),
-    fileSizeBytes: reader.readLongOrNull(offsets[2]) ?? 0,
-    refCount: reader.readLongOrNull(offsets[3]) ?? 1,
-    relativePath: reader.readString(offsets[4]),
+    fileSizeBytes: reader.readLongOrNull(offsets[3]) ?? 0,
+    refCount: reader.readLongOrNull(offsets[4]) ?? 1,
+    relativePath: reader.readString(offsets[5]),
   );
   object.createdAt = reader.readDateTime(offsets[1]);
+  object.deletedAt = reader.readDateTimeOrNull(offsets[2]);
   object.id = id;
   return object;
 }
@@ -124,10 +131,12 @@ P _invoiceImageDeserializeProp<P>(
     case 1:
       return (reader.readDateTime(offset)) as P;
     case 2:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 3:
-      return (reader.readLongOrNull(offset) ?? 1) as P;
+      return (reader.readLongOrNull(offset) ?? 0) as P;
     case 4:
+      return (reader.readLongOrNull(offset) ?? 1) as P;
+    case 5:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -522,6 +531,80 @@ extension InvoiceImageQueryFilter
   }
 
   QueryBuilder<InvoiceImage, InvoiceImage, QAfterFilterCondition>
+      deletedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'deletedAt',
+      ));
+    });
+  }
+
+  QueryBuilder<InvoiceImage, InvoiceImage, QAfterFilterCondition>
+      deletedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'deletedAt',
+      ));
+    });
+  }
+
+  QueryBuilder<InvoiceImage, InvoiceImage, QAfterFilterCondition>
+      deletedAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'deletedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InvoiceImage, InvoiceImage, QAfterFilterCondition>
+      deletedAtGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'deletedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InvoiceImage, InvoiceImage, QAfterFilterCondition>
+      deletedAtLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'deletedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InvoiceImage, InvoiceImage, QAfterFilterCondition>
+      deletedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'deletedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<InvoiceImage, InvoiceImage, QAfterFilterCondition>
       fileSizeBytesEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -856,6 +939,18 @@ extension InvoiceImageQuerySortBy
     });
   }
 
+  QueryBuilder<InvoiceImage, InvoiceImage, QAfterSortBy> sortByDeletedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deletedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InvoiceImage, InvoiceImage, QAfterSortBy> sortByDeletedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deletedAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<InvoiceImage, InvoiceImage, QAfterSortBy> sortByFileSizeBytes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'fileSizeBytes', Sort.asc);
@@ -919,6 +1014,18 @@ extension InvoiceImageQuerySortThenBy
   QueryBuilder<InvoiceImage, InvoiceImage, QAfterSortBy> thenByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InvoiceImage, InvoiceImage, QAfterSortBy> thenByDeletedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deletedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InvoiceImage, InvoiceImage, QAfterSortBy> thenByDeletedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'deletedAt', Sort.desc);
     });
   }
 
@@ -988,6 +1095,12 @@ extension InvoiceImageQueryWhereDistinct
     });
   }
 
+  QueryBuilder<InvoiceImage, InvoiceImage, QDistinct> distinctByDeletedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'deletedAt');
+    });
+  }
+
   QueryBuilder<InvoiceImage, InvoiceImage, QDistinct>
       distinctByFileSizeBytes() {
     return QueryBuilder.apply(this, (query) {
@@ -1026,6 +1139,12 @@ extension InvoiceImageQueryProperty
   QueryBuilder<InvoiceImage, DateTime, QQueryOperations> createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'createdAt');
+    });
+  }
+
+  QueryBuilder<InvoiceImage, DateTime?, QQueryOperations> deletedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'deletedAt');
     });
   }
 

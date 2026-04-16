@@ -444,7 +444,6 @@ class _AddBatchRecordDialogState extends ConsumerState<AddBatchRecordDialog>
               ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 160),
                 child: Scrollbar(
-                  thumbVisibility: true,
                   child: SingleChildScrollView(
                     child: tasksAsync.when(
                       data: (state) {

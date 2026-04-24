@@ -1,0 +1,10 @@
+{
+  "name": "CarSah Wireframe Generator",
+  "id": "carsah-wireframe-gen-2026",
+  "api": "1.0.0",
+  "main": "code.js",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page"
+}

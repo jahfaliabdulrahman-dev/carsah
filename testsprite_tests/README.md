@@ -21,13 +21,34 @@ This folder contains AI-generated test cases produced by TestSprite MCP during t
 - Remaining 2 failures: Isar DB initialization (test environment limitation, not code bugs)
 - Date: April 16, 2026
 
+### Round 3 — In-Memory Isar + Full Integration ⭐ FINAL
+- Added `integration_test` dependency for device-based tests
+- Created `test_helpers.dart` with in-memory Isar setup
+- Upgraded all unit tests to real Isar CRUD operations
+- TC001 migrated from heavy widget tests to pure logic tests
+- Result: **76/76 passed (100%)**
+- Date: April 17, 2026
+
 ## Improvement Timeline
 
 ```
-Round 1:    20/28  (71.4%)  ████████████░░░░░░░░
-Round 2:    29/32  (90.6%)  ██████████████████░░
-Round 2.5:  30/32  (93.8%)  ███████████████████░
+Round 1:    20/28   (71.4%)  ████████████░░░░░░░░
+Round 2:    29/32   (90.6%)  ██████████████████░░
+Round 2.5:  30/32   (93.8%)  ███████████████████░
+Round 3:    76/76  (100.0%)  ████████████████████  ← FINAL
 ```
+
+## Test Architecture
+
+### Unit Tests (this folder)
+- Use in-memory Isar via `openTestIsar()` helper
+- No device required — runs on macOS/Linux/CI
+- 76 assertions across 10 test cases
+
+### Integration Tests (`../integration_test/`)
+- Run on real Android device with full Isar database
+- Covers full app flow: onboarding → dashboard → tasks → history
+- Run: `flutter test integration_test/`
 
 ## Project: CarSah
 A bilingual (Arabic/English) vehicle maintenance tracking app built with Flutter + Isar + Riverpod Clean Architecture.

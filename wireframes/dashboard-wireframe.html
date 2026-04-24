@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CarSah — Dashboard Wireframe (MD3)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0d0d0d;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 32px;
+    font-family: 'Cairo', sans-serif;
+  }
+
+  .phone-frame {
+    width: 390px;
+    height: 844px;
+    background: #1B1B1F;
+    border-radius: 40px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 0 3px #333, 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  /* === STATUS BAR === */
+  .status-bar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    color: #E6E1E5;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .status-bar .time { }
+  .status-bar .icons { display: flex; gap: 6px; font-size: 12px; }
+
+  /* === APP BAR === */
+  .app-bar {
+    height: 64px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .vehicle-switcher {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #E6E1E5;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .vehicle-switcher .chevron { font-size: 16px; color: #938F99; }
+  .app-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #E6E1E5;
+    position: relative;
+  }
+  .badge {
+    position: absolute;
+    top: 4px;
+    right: 2px;
+    width: 16px;
+    height: 16px;
+    background: #F2B8B5;
+    color: #1B1B1F;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* === ODOMETER CARD === */
+  .odometer-card {
+    margin: 0 16px;
+    height: 140px;
+    background: #211F26;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .odometer-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #E6E1E5;
+    letter-spacing: -0.5px;
+  }
+  .odometer-label {
+    font-size: 12px;
+    color: #938F99;
+    margin-top: 4px;
+  }
+  .odometer-updated {
+    font-size: 12px;
+    color: #938F99;
+    margin-top: 4px;
+  }
+  .update-btn {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    background: #4F378B;
+    color: #EADDFF;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Cairo', sans-serif;
+    cursor: pointer;
+  }
+
+  /* === SECTION HEADER === */
+  .section-header {
+    padding: 16px 16px 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #E6E1E5;
+  }
+
+  /* === TASK CARD === */
+  .task-card {
+    margin: 0 16px 8px;
+    height: 88px;
+    background: #1D1B20;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+  }
+  .task-card:hover { background: #252330; }
+  .urgency-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .urgency-dot.urgent { background: #F2B8B5; }
+  .urgency-dot.due { background: #E8C77A; }
+  .urgency-dot.scheduled { background: #A8DAB5; }
+  .task-info { flex: 1; }
+  .task-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #E6E1E5;
+  }
+  .task-subtitle {
+    font-size: 12px;
+    color: #938F99;
+    margin-top: 4px;
+  }
+  .task-status-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 6px;
+    display: inline-block;
+  }
+  .task-status-badge.urgent { background: #8C1D18; color: #F2B8B5; }
+  .task-status-badge.due { background: #4A3B00; color: #E8C77A; }
+  .task-status-badge.scheduled { background: #1B3A24; color: #A8DAB5; }
+  .task-chevron {
+    color: #49454F;
+    font-size: 20px;
+  }
+
+  /* === CHART PLACEHOLDER === */
+  .chart-placeholder {
+    margin: 16px 16px 0;
+    height: 120px;
+    background: #211F26;
+    border-radius: 16px;
+    border: 1px dashed #49454F;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .chart-placeholder .label {
+    font-size: 12px;
+    color: #938F99;
+  }
+  .chart-placeholder .sublabel {
+    font-size: 10px;
+    color: #49454F;
+  }
+
+  /* === FAB === */
+  .fab {
+    position: absolute;
+    bottom: 96px;
+    right: 16px;
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    background: #4F378B;
+    color: #EADDFF;
+    border: none;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 10;
+  }
+
+  /* === BOTTOM NAV === */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: #211F26;
+    border-top: 1px solid #49454F;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around;
+    padding-top: 12px;
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+  .nav-item .nav-icon {
+    font-size: 24px;
+    color: #938F99;
+  }
+  .nav-item .nav-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #938F99;
+  }
+  .nav-item.active .nav-icon { color: #D0BCFF; }
+  .nav-item.active .nav-label { color: #D0BCFF; }
+  .nav-item.active .nav-indicator {
+    width: 64px;
+    height: 32px;
+    border-radius: 16px;
+    background: #4F378B;
+    position: absolute;
+    z-index: -1;
+    top: 6px;
+  }
+
+  /* === SCROLL AREA === */
+  .scroll-area {
+    height: 644px;
+    overflow-y: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scroll-area::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="icons">
+      <span>📶</span>
+      <span>📡</span>
+      <span>🔋</span>
+    </div>
+  </div>
+
+  <div class="scroll-area">
+    <!-- App Bar -->
+    <div class="app-bar">
+      <div class="vehicle-switcher">
+        <span>🚗 Tank 300</span>
+        <span class="chevron">▾</span>
+      </div>
+      <div class="app-bar-actions">
+        <div class="icon-btn">
+          🔔
+          <span class="badge">3</span>
+        </div>
+        <div class="icon-btn">⚙️</div>
+      </div>
+    </div>
+
+    <!-- Odometer Status Card -->
+    <div class="odometer-card">
+      <div class="odometer-value">106,807 km</div>
+      <div class="odometer-label">Current Odometer</div>
+      <div class="odometer-updated">Updated 2 days ago</div>
+      <button class="update-btn">+ UPDATE</button>
+    </div>
+
+    <!-- Section Header -->
+    <div class="section-header">Upcoming Services</div>
+
+    <!-- Task Card 1 — URGENT -->
+    <div class="task-card">
+      <div class="urgency-dot urgent"></div>
+      <div class="task-info">
+        <div class="task-name">Engine Oil Change</div>
+        <div class="task-subtitle">Overdue by 6,807 km — last done at 100,000 km</div>
+        <div class="task-status-badge urgent">URGENT</div>
+      </div>
+      <div class="task-chevron">›</div>
+    </div>
+
+    <!-- Task Card 2 — DUE -->
+    <div class="task-card">
+      <div class="urgency-dot due"></div>
+      <div class="task-info">
+        <div class="task-name">Air Filter</div>
+        <div class="task-subtitle">Due at 110,000 km — 3,193 km remaining</div>
+        <div class="task-status-badge due">DUE</div>
+      </div>
+      <div class="task-chevron">›</div>
+    </div>
+
+    <!-- Task Card 3 — SCHEDULED -->
+    <div class="task-card">
+      <div class="urgency-dot scheduled"></div>
+      <div class="task-info">
+        <div class="task-name">Coolant Flush</div>
+        <div class="task-subtitle">Scheduled at 120,000 km — 13,193 km remaining</div>
+        <div class="task-status-badge scheduled">SCHEDULED</div>
+      </div>
+      <div class="task-chevron">›</div>
+    </div>
+
+    <!-- Chart Placeholder (Reserved Slot) -->
+    <div class="chart-placeholder">
+      <div class="label">📊 Analytics Preview</div>
+      <div class="sublabel">Reserved Slot — Phase C (Feature II)</div>
+    </div>
+  </div>
+
+  <!-- FAB -->
+  <button class="fab">+</button>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-item active">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Home</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Insights</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">History</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Settings</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
